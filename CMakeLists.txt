@@ -3,12 +3,26 @@ cmake_minimum_required(VERSION 3.23.0 FATAL_ERROR)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 project(TurboRVB_minicode LANGUAGES Fortran C) 
+find_package (Python COMPONENTS Interpreter)
 
 include(CTest)
 
 set(OFFLOAD_FLAGS   ""    CACHE STRING    "Flags of openmp offload")
 
 add_executable(turborvb_minicode)
+
+# Make special target that will create src/makefun.F90 file
+add_custom_command(
+    OUTPUT makefun.F90
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/assemble/
+    COMMAND ${CMAKE_COMMAND} -E env ${Python_EXECUTABLE} assemble.py > ${CMAKE_CURRENT_BINARY_DIR}/makefun.F90
+    COMMENT "Generating makefun.F90"
+    VERBATIM
+    DEPENDS ${CMAKE_SOURCE_DIR}/src/assemble/orb_*.f90 ${CMAKE_SOURCE_DIR}/src/assemble/assemble.py
+    )
+
+# Add this target as dependency to turborvb_minicode
+#add_dependencies(turborvb_minicode makefun.F90)
 
 add_library(turborvb_minicode_lib STATIC
     src/constants.F90
@@ -18,8 +32,8 @@ add_library(turborvb_minicode_lib STATIC
 
 target_sources(turborvb_minicode
     PRIVATE
-    src/makefun.F90
     src/test_makefun_qmckl.F90
+    ${CMAKE_CURRENT_BINARY_DIR}/makefun.F90
     )
 
 # Set preprocessor directives
@@ -35,7 +49,7 @@ if (${OpenMP_Fortran_FOUND})
     set(OpenMP_Fortran_FLAGS ${OFFLOAD_FLAGS})
   else()
     target_link_libraries(turborvb_minicode_lib PUBLIC OpenMP::OpenMP_Fortran)
-    target_link_libraries(turborvb_minicodeb PUBLIC OpenMP::OpenMP_Fortran)
+    target_link_libraries(turborvb_minicode PUBLIC OpenMP::OpenMP_Fortran)
   endif()
 endif()
 
@@ -94,3 +108,4 @@ add_subdirectory(tests/with_qmckl_h)
 if (NOT ${OFFLOAD_FLAGS} STREQUAL "")
   add_subdirectory(tests/openmp)
 endif()
+
