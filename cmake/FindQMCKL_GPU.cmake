@@ -35,7 +35,7 @@
 message(" ")
 message("Looking for the QMCKL_GPU library:")
 
-set(QMCKL_SEARCH_PATHS
+set(QMCKL_GPU_SEARCH_PATHS
         ~/Library/Frameworks
         /Library/Frameworks
         /usr/local
@@ -46,35 +46,35 @@ set(QMCKL_SEARCH_PATHS
         /opt
 )
 
-find_path(QMCKL_INCLUDE_DIR
-          NAMES qmckl_f.F90
-          HINTS $ENV{QMCKL_DIR}
+find_path(QMCKL_GPU_INCLUDE_DIR
+          NAMES qmckl_gpu_f.F90
+          HINTS $ENV{QMCKL_GPU_DIR}
           PATH_SUFFIXES include
-          PATHS ${QMCKL_SEARCH_PATHS}
+          PATHS ${QMCKL_GPU_SEARCH_PATHS}
           )
 
 
 # No need to specify platform-specific prefix (e.g. libqmckl on Unix) or
 # suffix (e.g. .so on Unix or .dylib on MacOS) in NAMES. CMake takes care of that.
-find_library(QMCKL_LIBRARY
-             NAMES qmckl
-             HINTS $ENV{QMCKL_DIR}
+find_library(QMCKL_GPU_LIBRARY
+             NAMES qmckl_gpu
+	     HINTS $ENV{QMCKL_GPU_DIR}
              PATH_SUFFIXES lib64 lib
-             PATHS ${QMCKL_SEARCH_PATHS}
+             PATHS ${QMCKL_GPU_SEARCH_PATHS}
              )
 
-get_filename_component(QMCKL_LIBRARY_DIR ${QMCKL_LIBRARY} DIRECTORY)
+get_filename_component(QMCKL_GPU_LIBRARY_DIR ${QMCKL_GPU_LIBRARY} DIRECTORY)
 #get_filename_component(QMCKL_FILENAME ${QMCKL_LIBRARY} DIRECTORY)
 
-set(QMCKL_LIBRARIES "-L${QMCKL_LIBRARY_DIR} -lqmckl")
+set(QMCKL_GPU_LIBRARIES "-L${QMCKL_GPU_LIBRARY_DIR} -lqmckl_gpu")
 
 # Handle the QUIETLY and REQUIRED arguments and set QMCKL_FOUND to TRUE if
 # all listed variables are TRUE.
 INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(QMCKL DEFAULT_MSG QMCKL_LIBRARY QMCKL_INCLUDE_DIR )
-MARK_AS_ADVANCED(QMCKL_INCLUDE_DIR QMCKL_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(QMCKL_GPU DEFAULT_MSG QMCKL_GPU_LIBRARY QMCKL_GPU_INCLUDE_DIR )
+MARK_AS_ADVANCED(QMCKL_GPU_INCLUDE_DIR QMCKL_GPU_LIBRARY)
 
 # Mot setting _INCLUDE_DIR and _LIBRARIES is considered a bug,
 # see https://gitlab.kitware.com/cmake/community/-/wikis/doc/tutorials/How-To-Find-Libraries
-set(QMCKL_INCLUDE_DIRS ${QMCKL_INCLUDE_DIR})
+set(QMCKL_GPU_INCLUDE_DIRS ${QMCKL_GPU_INCLUDE_DIR})
 

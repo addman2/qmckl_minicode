@@ -3,11 +3,12 @@ program test_makefun_qmckl
 
     implicit none
 
-#ifdef _QMCKL
+#ifdef _QMCKL_
 
     integer(kind=4), parameter :: OPENMP_TEST = 1
     integer(kind=4), parameter :: QMCKL_TEST = 2
     integer(kind=4), parameter :: QMCKL_GPU_TEST = 3
+    integer(kind=4), parameter :: MAKEFUN_TEST = 4
 
     integer(kind=4) :: ii, operation = 0
     integer(kind=8) :: qmckl_ctx
@@ -17,19 +18,14 @@ program test_makefun_qmckl
     call init()
 
     select case (operation)
-
-    case(OPENMP_TEST)
-
+    case (OPENMP_TEST)
         call run_openmp_test()
-
-    case(QMCKL_TEST)
-
-        call test_orbital(1)
-
+    case (QMCKL_TEST)
+        call run_qmckl
+    case (MAKEFUN_TEST)
+        call run_makefun
     case default
-
         write (0,*) "Please provide the operation to test"
-
     end select
 
     call finish()
@@ -70,6 +66,9 @@ contains
           if (args(2).eq.'openmp') then
               operation = OPENMP_TEST
           end if
+          if (args(2).eq.'makefun') then
+              operation = MAKEFUN_TEST
+          end if
         end if
 
         rc = qmckl_trexio_read(qmckl_ctx&
@@ -99,11 +98,25 @@ contains
 
     end subroutine finish
 
-    subroutine test_orbital(orb)
+    subroutine run_makefun()
+
+        use makefun_pars
+
+        implicit none
+
+        call setup_parameters(6)
+        call randomize_electrons(1)
+
+        !call makefun(16, indt, i0, indtmin, indtm, typec, indpar, indorb, indshell,nelskip, z, parameters, zeta, r, rmu, distp, iflagnorm_unused, cr) 
+
+        call finish_parameters()
+
+    end subroutine run_makefun
+
+    subroutine run_qmckl()
 
         implicit none
         
-        integer(kind=4), intent(in) :: orb
         integer(kind=4) :: ii
         integer(kind=8) :: ao_num, mo_num
         real(kind=8), allocatable, dimension(:) :: z
@@ -113,8 +126,6 @@ contains
 
         ! Randomize the electron position
         call random_number(electron)
-
-        write (6,*) "Testing orbital ", orb
 
         rc = qmckl_get_ao_basis_ao_num(qmckl_ctx, ao_num)
         if (rc /= QMCKL_SUCCESS) then
@@ -162,7 +173,7 @@ contains
         if (allocated(electron)) deallocate(electron) 
         if (allocated(z)) deallocate(z) 
 
-    end subroutine test_orbital
+    end subroutine run_qmckl
 
     subroutine test_makefun_orbital(orb)
 

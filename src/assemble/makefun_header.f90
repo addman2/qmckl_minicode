@@ -3,6 +3,7 @@ subroutine makefun(iopt,indt,i0,indtmin,indtm,typec,indpar               &
            &,indorb,indshell,nelskip,z,dd,zeta,r,rmu,distp               &
            &,iflagnorm_unused,cr)
     use constants
+    use qmckl_helpers
     implicit none
     integer iopt,indt,i,k,nelskip,indpar,indorbp                         &
            &,indorb,indshell,indshellp,ic,indtmin,i0                     &
