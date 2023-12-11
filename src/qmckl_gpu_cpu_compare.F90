@@ -8,7 +8,7 @@ program qmckl_gpu_cpu_compare
     integer*4 :: rc
     character(len=1024), target :: args
     type(c_ptr) :: helper_ptr
-    character(len=1), pointer :: helper_ptr
+    !character(len=1), pointer :: helper_ptr
 
     qmckl_gpu_device_id = 1
 
