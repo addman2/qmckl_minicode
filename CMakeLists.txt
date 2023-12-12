@@ -3,94 +3,134 @@ cmake_minimum_required(VERSION 3.23.0 FATAL_ERROR)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 project(TurboRVB_minicode LANGUAGES Fortran C) 
+find_package (Python COMPONENTS Interpreter)
 
 include(CTest)
 
 set(OFFLOAD_FLAGS   ""    CACHE STRING    "Flags of openmp offload")
 
-add_executable(turborvb_minicode)
+find_package(OpenMP COMPONENTS Fortran)
+if (${OpenMP_Fortran_FOUND})
+  message(STATUS "OpenMP offload flags: ${OFFLOAD_FLAGS}")
+  if (NOT "${OFFLOAD_FLAGS}" STREQUAL "")
+    set(OpenMP_Fortran_FLAGS ${OFFLOAD_FLAGS})
+  endif()
+endif()
 
-add_library(turborvb_minicode_lib STATIC
-    src/constants.F90
-    src/qmckl.F90
-    src/trexio.F90
-    )
-
-target_sources(turborvb_minicode
-    PRIVATE
-    src/makefun.F90
-    src/test_makefun_qmckl.F90
-    )
+message(STATUS "OpenMP Fortran flags: ${OpenMP_Fortran_FLAGS}")
 
 # Set preprocessor directives
 set(PPDIRECTIVES "")
 
-find_package(OpenMP COMPONENTS Fortran)
-if (${OpenMP_Fortran_FOUND})
-  if (NOT "${OFFLOAD_FLAGS}" STREQUAL "")
-    target_link_libraries(turborvb_minicode_lib PUBLIC ${OFFLOAD_FLAGS})
-    target_link_libraries(turborvb_minicode PUBLIC ${OFFLOAD_FLAGS})
-    set_property(TARGET turborvb_minicode_lib APPEND PROPERTY LINK_FLAGS ${OFFLOAD_FLAGS})
-    set_property(TARGET turborvb_minicode APPEND PROPERTY LINK_FLAGS ${OFFLOAD_FLAGS})
-    set(OpenMP_Fortran_FLAGS ${OFFLOAD_FLAGS})
-  else()
-    target_link_libraries(turborvb_minicode_lib PUBLIC OpenMP::OpenMP_Fortran)
-    target_link_libraries(turborvb_minicodeb PUBLIC OpenMP::OpenMP_Fortran)
-  endif()
-endif()
-
 find_package(TREXIO)
 if (TREXIO_FOUND)
     list( APPEND PPDIRECTIVES _TREXIO )
-    target_link_libraries(turborvb_minicode_lib PUBLIC ${TREXIO_LIBRARIES})
-    include_directories( ${TREXIO_INCLUDE_DIRS} )
 endif()
 
 find_package(QMCKL)
 if (QMCKL_FOUND)
     list( APPEND PPDIRECTIVES _QMCKL )
-    target_link_libraries(turborvb_minicode_lib PUBLIC ${QMCKL_LIBRARIES})
-    include_directories( ${QMCKL_INCLUDE_DIRS} )
 endif()
 
-#find_package(QMCKL_GPU)
-#if (QMCKL_GPU_FOUND)
-#    list( APPEND PPDIRECTIVES _QMCKL_GPU )
-#    link_libraries(${QMCKL_GPU_LIBRARIES})
-#    include_directories( ${QMCKL_GPU_INCLUDE_DIRS} )
-#endif()
+find_package(QMCKL_GPU)
+if (QMCKL_GPU_FOUND)
+    list( APPEND PPDIRECTIVES _QMCKL_GPU )
+endif()
+
+# Make special target that will create src/makefun.F90 file
+add_custom_command(
+    OUTPUT makefun.F90
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/assemble/
+    COMMAND ${CMAKE_COMMAND} -E env ${Python_EXECUTABLE} assemble.py > ${CMAKE_CURRENT_BINARY_DIR}/makefun.F90
+    COMMENT "Generating makefun.F90"
+    VERBATIM
+    DEPENDS ${CMAKE_SOURCE_DIR}/src/assemble/orb_*.f90 ${CMAKE_SOURCE_DIR}/src/assemble/assemble.py
+    )
+
+list(APPEND EXECUTABLES qmckl_runner)
+list(APPEND EXECUTABLES qmckl_reader)
+list(APPEND EXECUTABLES qmckl_example_scratch)
+list(APPEND EXECUTABLES qmckl_gpu_example_scratch)
+list(APPEND EXECUTABLES makefun_runner)
+list(APPEND EXECUTABLES makefun_qmckl_runner)
+list(APPEND EXECUTABLES qmckl_gpu_cpu_compare)
+
+add_library(turborvb_minicode_lib STATIC
+    src/constants.F90
+    src/qmckl.F90
+    src/qmckl_gpu.F90
+    src/trexio.F90
+    src/makefun_pars.F90
+    src/qmckl_helpers.F90
+    src/qmckl_gpu_helpers.F90
+    ${CMAKE_CURRENT_BINARY_DIR}/makefun.F90
+    )
+
+foreach(EXECUTABLE ${EXECUTABLES})
+    add_executable(${EXECUTABLE})
+    target_sources(${EXECUTABLE}
+        PRIVATE
+        src/${EXECUTABLE}.F90
+        )
+    target_link_libraries(${EXECUTABLE} PRIVATE turborvb_minicode_lib)
+endforeach()
 
 message(STATUS "Preprocessor directives: ${PPDIRECTIVES}")
 
-get_target_property(SRC_FILES turborvb_minicode_lib SOURCES)
-foreach(SRC_FILE ${SRC_FILES})
-  foreach(PPDIRECTIVE ${PPDIRECTIVES})
-    set_property(SOURCE ${SRC_FILE} APPEND PROPERTY COMPILE_DEFINITIONS ${PPDIRECTIVE})
-  endforeach()
-  set_source_files_properties(${SRC_FILE} PROPERTIES Fortran_PREPROCESS ON)
-  set_source_files_properties(${SRC_FILE} PROPERTIES Fortran_FREE ON)
-  # Set OpenMP flags for Fortran files, supporting GPU acceleration
+list(APPEND EXECUTABLES turborvb_minicode_lib)
+
+foreach(EXECUTABLE IN LISTS EXECUTABLES)
+  set_target_properties(${EXECUTABLE} PROPERTIES LINK_FLAGS "-g -O0 -mp=gpu")
+
   if (OpenMP_Fortran_FOUND)
-    set_source_files_properties(${SRC_FILE} PROPERTIES COMPILE_FLAGS ${OpenMP_Fortran_FLAGS})
+    #target_link_libraries(${EXECUTABLE} PRIVATE OpenMP::OpenMP_Fortran)
   endif()
+
+  if (TREXIO_FOUND)
+    target_link_libraries(${EXECUTABLE} PRIVATE ${TREXIO_LIBRARIES})
+    target_include_directories(${EXECUTABLE} PRIVATE ${TREXIO_INCLUDE_DIRS})
+  endif()
+
+  if (QMCKL_FOUND)
+    target_link_libraries(${EXECUTABLE} PRIVATE ${QMCKL_LIBRARIES})
+    target_include_directories(${EXECUTABLE} PRIVATE ${QMCKL_INCLUDE_DIRS})
+  endif()
+
+  if (QMCKL_FOUND)
+    target_link_libraries(${EXECUTABLE} PRIVATE ${QMCKL_GPU_LIBRARIES})
+    target_include_directories(${EXECUTABLE} PRIVATE ${QMCKL_GPU_INCLUDE_DIRS})
+  endif()
+
+  get_target_property(SRC_FILES ${EXECUTABLE} SOURCES)
+  foreach(SRC_FILE ${SRC_FILES})
+    foreach(PPDIRECTIVE ${PPDIRECTIVES})
+      set_property(SOURCE ${SRC_FILE} APPEND PROPERTY COMPILE_DEFINITIONS ${PPDIRECTIVE})
+      message(STATUS "Adding preprocessor directive ${PPDIRECTIVE} to ${SRC_FILE}")
+    endforeach()
+    set_source_files_properties(${SRC_FILE} PROPERTIES Fortran_PREPROCESS ON)
+    set_source_files_properties(${SRC_FILE} PROPERTIES Fortran_FREE ON)
+    # Flags for checking
+    # set_source_files_properties(${SRC_FILE} PROPERTIES COMPILE_FLAGS "-g -O0 -fcheck=all -Wall -Wextra -Wconversion -Wimplicit-interface -Wimplicit-procedure -Wno-unused-parameter -Wno-unused-dummy-argument -Wno-unused-variable -Wno-unused-function -Wno-unused-label -Wno-unused-value -Wno-unused-do-component -Wno-unused-do-component-loop -Mstandard --allow-type-mismatch")
+    # Set OpenMP flags for Fortran files, supporting GPU acceleration
+    set (COMPILE_FLAGS "-g -O0")
+    if (OpenMP_Fortran_FOUND)
+      message(STATUS "Adding OpenMP flags to ${SRC_FILE}: ${OpenMP_Fortran_FLAGS}")
+      set(COMPILE_FLAGS "${COMPILE_FLAGS} ${OpenMP_Fortran_FLAGS}")
+    endif()
+    set_source_files_properties(${SRC_FILE} PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS})
+  endforeach()
 endforeach()
 
-get_target_property(SRC_FILES turborvb_minicode SOURCES)
-foreach(SRC_FILE ${SRC_FILES})
-  foreach(PPDIRECTIVE ${PPDIRECTIVES})
-    set_property(SOURCE ${SRC_FILE} APPEND PROPERTY COMPILE_DEFINITIONS ${PPDIRECTIVE})
-  endforeach()
-  set_source_files_properties(${SRC_FILE} PROPERTIES Fortran_PREPROCESS ON)
-  set_source_files_properties(${SRC_FILE} PROPERTIES Fortran_FREE ON)
-  if (OpenMP_Fortran_FOUND)
-    set_source_files_properties(${SRC_FILE} PROPERTIES COMPILE_FLAGS ${OpenMP_Fortran_FLAGS})
-  endif()
-endforeach()
+# Add tests ##############################################################
 
-# Link libraries
-target_link_libraries(turborvb_minicode PRIVATE turborvb_minicode_lib)
+enable_testing()
 
 add_subdirectory(tests/with_qmckl_h)
+add_subdirectory(tests/makefun)
+add_subdirectory(tests/reader)
+add_subdirectory(tests/gpu_cpu_compare)
+
 if (NOT ${OFFLOAD_FLAGS} STREQUAL "")
   add_subdirectory(tests/openmp)
 endif()
+
