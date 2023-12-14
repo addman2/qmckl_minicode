@@ -11,27 +11,27 @@ subroutine provider_qmckl_gpu(point&
     integer(kind=4), intent(in) :: ang_mom
     integer(kind=4), intent(in) :: multiplicity
 
-    real(kind=8), dimension(3), intent(in) :: point
+    real(kind=8), target, dimension(3), intent(in) :: point
     real(kind=8), intent(in) :: par
-    real(kind=8), dimension(multiplicity), intent(out) :: values
+    real(kind=8), target, dimension(multiplicity), intent(out) :: values
 
     integer(kind=4) :: rc
 
     ! Here we are defining local varibales to hold the data that will be passed
 
-    real(kind=8), dimension(1) :: charges
-    real(kind=8), dimension(3,1) :: positions
-    real(kind=8), dimension(1) :: shell_factor
-    real(kind=8), dimension(1) :: exponent
-    real(kind=8), dimension(1) :: coefficient
-    real(kind=8), dimension(1) :: prim_factor
-    real(kind=8), dimension(:), allocatable :: ao_factor
+    real(kind=8), target, dimension(1) :: charges
+    real(kind=8), target, dimension(3,1) :: positions
+    real(kind=8), target, dimension(1) :: shell_factor
+    real(kind=8), target, dimension(1) :: exponent
+    real(kind=8), target, dimension(1) :: coefficient
+    real(kind=8), target, dimension(1) :: prim_factor
+    real(kind=8), target, dimension(:), allocatable :: ao_factor
 
-    integer(kind=8), dimension(1) :: nucleus_shell_num
-    integer(kind=8), dimension(1) :: nucleus_index
-    integer(kind=4), dimension(1) :: shell_ang_mom
-    integer(kind=8), dimension(1) :: shell_prim_num
-    integer(kind=8), dimension(1) :: shell_prim_index
+    integer(kind=8), target, dimension(1) :: nucleus_shell_num
+    integer(kind=8), target, dimension(1) :: nucleus_index
+    integer(kind=4), target, dimension(1) :: shell_ang_mom
+    integer(kind=8), target, dimension(1) :: shell_prim_num
+    integer(kind=8), target, dimension(1) :: shell_prim_index
 
     integer(kind=4), dimension(1) :: array
 
