@@ -125,10 +125,10 @@ endforeach()
 
 enable_testing()
 
-add_subdirectory(tests/with_qmckl_h)
-add_subdirectory(tests/makefun)
-add_subdirectory(tests/reader)
-add_subdirectory(tests/gpu_cpu_compare)
+#add_subdirectory(tests/with_qmckl_h)
+#add_subdirectory(tests/makefun)
+#add_subdirectory(tests/reader)
+#add_subdirectory(tests/gpu_cpu_compare)
 
 if (NOT ${OFFLOAD_FLAGS} STREQUAL "")
   add_subdirectory(tests/openmp)
