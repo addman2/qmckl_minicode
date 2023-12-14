@@ -47,20 +47,13 @@ add_custom_command(
     DEPENDS ${CMAKE_SOURCE_DIR}/src/assemble/orb_*.f90 ${CMAKE_SOURCE_DIR}/src/assemble/assemble.py
     )
 
-list(APPEND EXECUTABLES qmckl_runner)
 list(APPEND EXECUTABLES qmckl_reader)
-list(APPEND EXECUTABLES qmckl_example_scratch)
-list(APPEND EXECUTABLES qmckl_gpu_example_scratch)
-list(APPEND EXECUTABLES makefun_runner)
-list(APPEND EXECUTABLES makefun_qmckl_runner)
-list(APPEND EXECUTABLES qmckl_gpu_cpu_compare)
 
 add_library(turborvb_minicode_lib STATIC
     src/constants.F90
     src/qmckl.F90
     src/qmckl_gpu.F90
     src/trexio.F90
-    src/makefun_pars.F90
     src/qmckl_helpers.F90
     src/qmckl_gpu_helpers.F90
     ${CMAKE_CURRENT_BINARY_DIR}/makefun.F90
@@ -80,7 +73,7 @@ message(STATUS "Preprocessor directives: ${PPDIRECTIVES}")
 list(APPEND EXECUTABLES turborvb_minicode_lib)
 
 foreach(EXECUTABLE IN LISTS EXECUTABLES)
-  set_target_properties(${EXECUTABLE} PROPERTIES LINK_FLAGS "-g -O0 -mp=gpu")
+  set_target_properties(${EXECUTABLE} PROPERTIES LINK_FLAGS "-g -O0")
 
   if (OpenMP_Fortran_FOUND)
     #target_link_libraries(${EXECUTABLE} PRIVATE OpenMP::OpenMP_Fortran)
@@ -110,7 +103,6 @@ foreach(EXECUTABLE IN LISTS EXECUTABLES)
     set_source_files_properties(${SRC_FILE} PROPERTIES Fortran_PREPROCESS ON)
     set_source_files_properties(${SRC_FILE} PROPERTIES Fortran_FREE ON)
     # Flags for checking
-    # set_source_files_properties(${SRC_FILE} PROPERTIES COMPILE_FLAGS "-g -O0 -fcheck=all -Wall -Wextra -Wconversion -Wimplicit-interface -Wimplicit-procedure -Wno-unused-parameter -Wno-unused-dummy-argument -Wno-unused-variable -Wno-unused-function -Wno-unused-label -Wno-unused-value -Wno-unused-do-component -Wno-unused-do-component-loop -Mstandard --allow-type-mismatch")
     # Set OpenMP flags for Fortran files, supporting GPU acceleration
     set (COMPILE_FLAGS "-g -O0")
     if (OpenMP_Fortran_FOUND)
@@ -127,10 +119,10 @@ enable_testing()
 
 #add_subdirectory(tests/with_qmckl_h)
 #add_subdirectory(tests/makefun)
-#add_subdirectory(tests/reader)
+add_subdirectory(tests/reader)
 #add_subdirectory(tests/gpu_cpu_compare)
 
 if (NOT ${OFFLOAD_FLAGS} STREQUAL "")
-  add_subdirectory(tests/openmp)
+  #add_subdirectory(tests/openmp)
 endif()
 

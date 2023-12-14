@@ -295,10 +295,10 @@ program qmckl_reader
     print *, "Point", point
 
     rc = qmckl_set_point(qmckl_ctx&
-                       &, "N"&
-                       &, ao_basis_ao_num&
-                       &, point&
-                       &, 3_8 * size(point))
+                      &, "N"&
+                      &, 1_8&
+                      &, point&
+                      &, 3_8 * size(point))
 
     if (rc /= 0) then
         print *, "qmckl_set_point failed"
