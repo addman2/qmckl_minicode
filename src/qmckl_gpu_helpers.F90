@@ -18,7 +18,7 @@ contains
 
         integer(kind=4) :: rc
 
-        qmckl_gpu_ctx = qmckl_context_create_device(qmckl_context_device)
+        qmckl_gpu_ctx = qmckl_context_create_device(qmckl_gpu_device_id)
         if (qmckl_gpu_ctx.eq.0_8) then
             write (0,*) "QMCKL GPU context is a null pointer, but it should never happen"
             stop 1

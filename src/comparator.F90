@@ -11,7 +11,7 @@ program comparator
 
     integer(kind=4) :: ang_mom, multiplicity
 
-    ang_mom = 1
+    ang_mom = 2
     multiplicity = (ang_mom + 1) * (ang_mom + 2) / 2
 
     allocate(values(multiplicity))
@@ -29,10 +29,16 @@ program comparator
                      &, multiplicity)
 
     ! Print point with 3 decimal spaces
+    write(*, *)  
+    write(*, *) "#############################################"
+    write(*, *)  
     write(*, '("Point = ", 3F7.3)') point
-    write(*, '("Ang mom = ", I7)') ang_mom
+    write(*, '("Ang mom = ", I3)') ang_mom
     write(*, '("Par = ", F7.3)') par
     write(*, '("Values = ", 16F7.3)') values
+    write(*, *)  
+    write(*, *) "#############################################"
+    write(*, *)  
 
     if (allocated(values)) then
         deallocate(values)

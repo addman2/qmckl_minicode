@@ -48,8 +48,10 @@ add_custom_command(
     )
 
 list(APPEND EXECUTABLES qmckl_reader)
+list(APPEND EXECUTABLES comparator)
 
 add_library(turborvb_minicode_lib STATIC
+    src/provider_qmckl.F90
     src/constants.F90
     src/qmckl.F90
     src/qmckl_gpu.F90
@@ -120,6 +122,7 @@ enable_testing()
 #add_subdirectory(tests/with_qmckl_h)
 #add_subdirectory(tests/makefun)
 add_subdirectory(tests/reader)
+add_subdirectory(tests/comparator)
 #add_subdirectory(tests/gpu_cpu_compare)
 
 if (NOT ${OFFLOAD_FLAGS} STREQUAL "")
