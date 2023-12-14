@@ -52,6 +52,8 @@ list(APPEND EXECUTABLES comparator)
 
 add_library(turborvb_minicode_lib STATIC
     src/provider_qmckl.F90
+    src/provider_qmckl_gpu.F90
+    src/provider_makefun.F90
     src/constants.F90
     src/qmckl.F90
     src/qmckl_gpu.F90
@@ -75,7 +77,7 @@ message(STATUS "Preprocessor directives: ${PPDIRECTIVES}")
 list(APPEND EXECUTABLES turborvb_minicode_lib)
 
 foreach(EXECUTABLE IN LISTS EXECUTABLES)
-  set_target_properties(${EXECUTABLE} PROPERTIES LINK_FLAGS "-g -O0")
+  set_target_properties(${EXECUTABLE} PROPERTIES LINK_FLAGS "-g -O0 ${OpenMP_Fortran_FLAGS}")
 
   if (OpenMP_Fortran_FOUND)
     #target_link_libraries(${EXECUTABLE} PRIVATE OpenMP::OpenMP_Fortran)
