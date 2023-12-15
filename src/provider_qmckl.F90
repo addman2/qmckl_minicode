@@ -2,7 +2,8 @@ subroutine provider_qmckl(point&
                        &, ang_mom&
                        &, par&
                        &, values&
-                       &, multiplicity)
+                       &, multiplicity&
+                       &, gl)
 
     use qmckl_helpers
 
@@ -10,10 +11,15 @@ subroutine provider_qmckl(point&
 
     integer(kind=4), intent(in) :: ang_mom
     integer(kind=4), intent(in) :: multiplicity
+    integer(kind=4), intent(in) :: gl
 
     real(kind=8), dimension(3), intent(in) :: point
     real(kind=8), intent(in) :: par
-    real(kind=8), dimension(multiplicity), intent(out) :: values
+
+    ! If gl is 0 only values are computed
+    ! If gl is 1 values gradients and laplacians are computed
+    ! this requires 5 times more space
+    real(kind=8), dimension(multiplicity * (1 + gl * 4)), intent(out) :: values
 
     integer(kind=4) :: rc
 
@@ -217,15 +223,27 @@ subroutine provider_qmckl(point&
         print *, "qmckl_set_point succeeded"
     end if
 
-    rc = qmckl_get_ao_basis_ao_value_inplace(qmckl_ctx&
-                                          &, values&
-                                          &, 1_8 * multiplicity)
-    if (rc /= 0) then
-        print *, "qmckl_get_ao_basis_ao_value failed"
-        print *, "Error code", rc
-        stop 1
+    if (gl.eq.0) then 
+        rc = qmckl_get_ao_basis_ao_value_inplace(qmckl_ctx&
+                                              &, values&
+                                              &, 1_8 * multiplicity)
+        if (rc /= 0) then
+            print *, "qmckl_get_ao_basis_ao_value failed"
+            print *, "Error code", rc
+            stop 1
+        else
+            print *, "qmckl_get_ao_basis_ao_value succeeded"
+        end if
     else
-        print *, "qmckl_get_ao_basis_ao_value succeeded"
+        rc = qmckl_get_ao_basis_ao_vgl_inplace(qmckl_ctx&
+                                            &, values&
+                                            &, 5_8 * multiplicity)
+        if (rc /= 0) then
+            write(*,*) "qmckl_get_ao_basis_vgl failed"
+            stop 1
+        else
+            write(*,*) "qmckl_get_ao_basis_vgl succeeded"
+        end if
     end if
 
     call qmckl_finalize()

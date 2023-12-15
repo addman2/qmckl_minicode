@@ -2,7 +2,8 @@ subroutine provider_qmckl_gpu(point&
                            &, ang_mom&
                            &, par&
                            &, values&
-                           &, multiplicity)
+                           &, multiplicity&
+                           &, gl)
 
     use qmckl_gpu_helpers
 
@@ -10,10 +11,15 @@ subroutine provider_qmckl_gpu(point&
 
     integer(kind=4), intent(in) :: ang_mom
     integer(kind=4), intent(in) :: multiplicity
+    integer(kind=4), intent(in) :: gl
 
     real(kind=8), target, dimension(3), intent(in) :: point
     real(kind=8), intent(in) :: par
-    real(kind=8), target, dimension(multiplicity), intent(out) :: values
+
+    ! If gl is 0 only values are computed
+    ! If gl is 1 values gradients and laplacians are computed
+    ! this requires 5 times more space
+    real(kind=8), dimension(multiplicity * (1 + gl * 4)), intent(out), target :: values
 
     integer(kind=4) :: rc
 
@@ -314,21 +320,39 @@ subroutine provider_qmckl_gpu(point&
         print *, "qmckl_set_point succeeded"
     end if
 
-    !$omp target data map(from:values(1:multiplicity))
+    if (gl.eq.0) then 
+        !$omp target data map(from:values(1:multiplicity))
 
-    !$omp target data use_device_ptr(values)
-    rc = qmckl_get_ao_basis_ao_value_device(qmckl_gpu_ctx&
-                                         &, c_loc(values)&
-                                         &, 1_8 * multiplicity)
-    !$omp end target data
-    !$omp end target data
-    !if (rc /= 0) then
-    !    print *, "qmckl_get_ao_basis_ao_value failed"
-    !    print *, "Error code", rc
-    !    stop 1
-    !else
-    !    print *, "qmckl_get_ao_basis_ao_value succeeded"
-    !end if
+        !$omp target data use_device_ptr(values)
+        rc = qmckl_get_ao_basis_ao_value_device(qmckl_gpu_ctx&
+                                              &, c_loc(values)&
+                                              &, 1_8 * multiplicity)
+        !$omp end target data
+        !$omp end target data
+        if (rc /= 0) then
+            print *, "qmckl_get_ao_basis_ao_value failed"
+            print *, "Error code", rc
+            stop 1
+        else
+            print *, "qmckl_get_ao_basis_ao_value succeeded"
+        end if
+    else
+        !$omp target data map(from:values(1:multiplicity*5))
+
+        !$omp target data use_device_ptr(values)
+        rc = qmckl_get_ao_basis_ao_vgl_device(qmckl_gpu_ctx&
+                                            &, c_loc(values)&
+                                            &, 5_8 * multiplicity)
+        !$omp end target data
+        !$omp end target data
+        if (rc /= 0) then
+            print *, "qmckl_get_ao_basis_ao_vgl failed"
+            print *, "Error code", rc
+            stop 1
+        else
+            print *, "qmckl_get_ao_basis_ao_vgl succeeded"
+        end if
+    end if
 
     !$omp end target data
 

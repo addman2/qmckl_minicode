@@ -24,16 +24,21 @@ subroutine provider_makefun(point&
                        &, ang_mom&
                        &, par&
                        &, values&
-                       &, multiplicity)
+                       &, multiplicity&
+                       &, gl)
 
     implicit none
 
     integer(kind=4), intent(in) :: ang_mom
     integer(kind=4), intent(in) :: multiplicity
+    integer(kind=4), intent(in) :: gl
 
     real(kind=8), dimension(3), intent(in) :: point
     real(kind=8), intent(in) :: par
-    real(kind=8), dimension(multiplicity), intent(out) :: values
+    ! If gl is 0 only values are computed
+    ! If gl is 1 values gradients and laplacians are computed
+    ! this requires 5 times more space
+    real(kind=8), dimension(multiplicity * (1 + gl * 4)), intent(out) :: values
 
     ! Local variables
 
@@ -42,8 +47,11 @@ subroutine provider_makefun(point&
     integer(kind=4) :: ii, jj, kk, count
 
     real(kind=8), dimension(3,0:max_power) :: powers
+    real(kind=8) :: radial_v
+    real(kind=8), dimension(3) :: radial_g
+    real(kind=8) :: radial_l
 
-    ! Initialize powers
+    ! Initialize helper values
 
     powers(:,0) = 1.0d0
 
@@ -53,9 +61,20 @@ subroutine provider_makefun(point&
         powers(3, ii) = powers(3, ii-1) * point(3)
     end do
 
+    radial_v = exp(-par * (point(1) * point(1) + point(2) * point(2) + point(3) * point(3)))
+
     do ii = 1, multiplicity
-        values(ii) = exp(-par * (point(1) * point(1) + point(2) * point(2) + point(3) * point(3)))
+        values(ii) = 1.0d0
     end do
+
+    ! Initialize gradients and laplacians
+
+    if (gl == 1) then
+        radial_g(1) = -2.0d0 * par * point(1) * radial_v
+        radial_g(2) = -2.0d0 * par * point(2) * radial_v
+        radial_g(3) = -2.0d0 * par * point(3) * radial_v
+        radial_l = par * (4.0d0 * par * (point(1) * point(1) + point(2) * point(2) + point(3) * point(3)) - 6.0d0) * radial_v
+    end if
 
     count = 1
     do ii = ang_mom, 0, -1
@@ -68,5 +87,34 @@ subroutine provider_makefun(point&
             count = count + 1
         end do
     end do
+
+    if (gl == 1) then
+        if (ang_mom == 0) then
+            
+        end if
+        do ii = ang_mom, 0, -1
+            do jj = ang_mom - ii, 0, -1
+                kk = ang_mom - ii - jj
+                !call plot(ii, jj, kk)
+                values(1 * multiplicity + count) = values(1 * multiplicity + count) * powers(1, ii-1)
+                values(1 * multiplicity + count) = values(1 * multiplicity + count) * powers(2, jj)
+                values(1 * multiplicity + count) = values(1 * multiplicity + count) * powers(3, kk)
+
+                values(2 * multiplicity + count) = values(2 * multiplicity + count) * powers(1, ii)
+                values(2 * multiplicity + count) = values(2 * multiplicity + count) * powers(2, jj-1)
+                values(2 * multiplicity + count) = values(2 * multiplicity + count) * powers(3, kk)
+
+                values(3 * multiplicity + count) = values(3 * multiplicity + count) * powers(1, ii)
+                values(3 * multiplicity + count) = values(3 * multiplicity + count) * powers(2, jj)
+                values(3 * multiplicity + count) = values(3 * multiplicity + count) * powers(3, kk-1)
+
+                values(4 * multiplicity + count) = powers(1, ii-2) * powers(2, jj) * powers(3, kk)&
+                                                &+ powers(1, ii) * powers(2, jj-2) * powers(3, kk)&
+                                                &+ powers(1, ii) * powers(2, jj) * powers(3, kk-2)
+                count = count + 1
+            end do
+        end do
+
+    end if
 
 end subroutine provider_makefun
