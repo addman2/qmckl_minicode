@@ -157,7 +157,7 @@ subroutine provider_qmckl(point&
         print *, "qmckl_set_ao_basis_shell_factor succeeded"
     end if
 
-    exponent(1) = 1.0_8
+    exponent(1) = par
     rc = qmckl_set_ao_basis_exponent(qmckl_ctx, exponent, 1_8 * size(exponent))
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_exponent failed"
