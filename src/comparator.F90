@@ -44,12 +44,12 @@ program comparator
                      &, multiplicity&
                      &, gl)
 
-    !call provider_makefun(point&
-    !                 &, ang_mom&
-    !                 &, par&
-    !                 &, values_3&
-    !                 &, multiplicity&
-    !                 &, gl)
+    call provider_makefun(point&
+                     &, ang_mom&
+                     &, par&
+                     &, values_3&
+                     &, multiplicity&
+                     &, gl)
 
     write(*, *)  
     write(*, *) "#############################################"
@@ -64,6 +64,7 @@ program comparator
     
     call show_values(gl, multiplicity, values_1, "qmckl")
     call show_values(gl, multiplicity, values_2, "gpu qmckl")
+    call show_values(gl, multiplicity, values_3, "makefun")
 
     write(*, *)  
     write(*, *) "#############################################"
