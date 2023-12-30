@@ -12,7 +12,7 @@ program comparator
     integer(kind=4) :: ang_mom, multiplicity, gl
 
     gl = 1_4
-    ang_mom = 1
+    ang_mom = 4
     multiplicity = (ang_mom + 1) * (ang_mom + 2) / 2
 
     allocate(values_1((gl * 4 + 1) * multiplicity))
