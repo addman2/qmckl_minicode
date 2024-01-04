@@ -194,7 +194,7 @@ subroutine provider_qmckl(point&
         print *, "qmckl_set_ao_basis_ao_num succeeded"
     end if
 
-    ao_factor = 1.0_8
+    ao_factor = 0.0 !(2/(3.14159265358))**(3_8/4_8)
     rc = qmckl_set_ao_basis_ao_factor(qmckl_ctx, ao_factor, 1_8 * multiplicity)
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_ao_factor failed"

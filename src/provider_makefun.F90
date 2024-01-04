@@ -64,7 +64,9 @@ subroutine provider_makefun(point&
     radial_v = exp(-par * (point(1) * point(1) + point(2) * point(2) + point(3) * point(3)))
 
     do ii = 1, size(values)
-        values(ii) = 1.0d0
+        values(ii) = 0.712705470354990_8
+        values(ii) = values(ii) * par ** 0.75
+        values(ii) = values(ii) * (8.0_8 * par) ** (ang_mom)
     end do
 
     ! Initialize gradients and laplacians
