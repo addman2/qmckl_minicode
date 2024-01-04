@@ -15,6 +15,9 @@ subroutine makefun(iopt,indt,i0,indtmin,indtm,typec,indpar               &
            &,rp1,rp2,rp3,rp4,rp5,rp6,rp7,rp8                             &
            &,dd1,dd2,dd3,dd4,dd5,c,cr,funp,fun2p,funb                    &
            &,peff2,arg,c0,c1,cost,zv(6),yv(6),xv(6),r2,r4,r6 ! up to i
+
+    integer :: count, multiplicity
+    real*8 :: power(3,0:6,0:indtm)
   !
   ! indorb are the number of orbitals occupied before calling
   ! this subroutine
