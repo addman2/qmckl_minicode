@@ -49,6 +49,45 @@
         end do
     end do
 
+    ! We need to calculate it again for derivatives, it could not be done in previous loop because of case if i0 /= indtmin
+    if (typec .ne. 1) then
+        count = 0
+        do ii = (iopt - 90), 0, -1
+            do jj = (iopt - 90) - ii, 0, -1
+                kk = (iopt - 90) - ii - jj
+                z(indorbp + count, indt + 1) = c
+                z(indorbp + count, indt + 2) = c
+                z(indorbp + count, indt + 3) = c
+                z(indorbp + count, indt + 4) = c
+                rp1 = 1.0_8
+                do i = ii + 1, 2 * ii
+                    rp1 = rp1 * i
+                end do
+                z(indorbp + count, indt + 1) = z(indorbp + count, indt + 1) / dsqrt(rp1)
+                z(indorbp + count, indt + 2) = z(indorbp + count, indt + 2) / dsqrt(rp1)
+                z(indorbp + count, indt + 3) = z(indorbp + count, indt + 3) / dsqrt(rp1)
+                z(indorbp + count, indt + 4) = z(indorbp + count, indt + 4) / dsqrt(rp1)
+                rp1 = 1.0_8
+                do i = jj + 1, 2 * jj
+                    rp1 = rp1 * i
+                end do
+                z(indorbp + count, indt + 1) = z(indorbp + count, indt + 1) / dsqrt(rp1)
+                z(indorbp + count, indt + 2) = z(indorbp + count, indt + 2) / dsqrt(rp1)
+                z(indorbp + count, indt + 3) = z(indorbp + count, indt + 3) / dsqrt(rp1)
+                z(indorbp + count, indt + 4) = z(indorbp + count, indt + 4) / dsqrt(rp1)
+                rp1 = 1.0_8
+                do i = kk + 1, 2 * kk
+                    rp1 = rp1 * i
+                end do
+                z(indorbp + count, indt + 1) = z(indorbp + count, indt + 1) / dsqrt(rp1)
+                z(indorbp + count, indt + 2) = z(indorbp + count, indt + 2) / dsqrt(rp1)
+                z(indorbp + count, indt + 3) = z(indorbp + count, indt + 3) / dsqrt(rp1)
+                z(indorbp + count, indt + 4) = z(indorbp + count, indt + 4) / dsqrt(rp1)
+                count = count + 1
+            end do
+        end do
+    end if
+
     ! Initialize gradients and laplacians (radial part)
 
     if (typec .ne. 1) then
@@ -96,54 +135,54 @@
             z(indorbp + 1, indt + 4) = (distp(indt + 4, 1) * rmu(2, indtmin) + 2.0d0 * distp(indt + 2, 1)) / rp1
             z(indorbp + 2, indt + 4) = (distp(indt + 4, 1) * rmu(3, indtmin) + 2.0d0 * distp(indt + 3, 1)) / rp1
         else
-    !        count = 1
-    !        do ii = (iopt - 90), 0, -1
-    !            do jj = (iopt - 90) - ii, 0, -1
-    !                kk = (iopt - 90) - ii - jj
+            count = 0
+            do ii = (iopt - 90), 0, -1
+                do jj = (iopt - 90) - ii, 0, -1
+                    kk = (iopt - 90) - ii - jj
 
-    !                ! First store polynomial part into respective places
-    !                ! Then solve full laplacian using using lower derivatives
-    !                ! Then do the same thing for gradients
-    !                ! Then finally the values
+                    ! First store polynomial part into respective places
+                    ! Then solve full laplacian using using lower derivatives
+                    ! Then do the same thing for gradients
+                    ! Then finally the values
 
-    !                z(indorbp + count - 1, indt + 1) = z(indorbp + count - 1, indt + 1) * powers(1, ii-1, 0)
-    !                z(indorbp + count - 1, indt + 1) = z(indorbp + count - 1, indt + 1) * powers(2, jj, 0)
-    !                z(indorbp + count - 1, indt + 1) = z(indorbp + count - 1, indt + 1) * powers(3, kk, 0)
-    !                z(indorbp + count - 1, indt + 1) = z(indorbp + count - 1, indt + 1) * ii
+                   z(indorbp + count, indt + 1) = z(indorbp + count, indt + 1) * powers(1, ii-1, 0)
+                   z(indorbp + count, indt + 1) = z(indorbp + count, indt + 1) * powers(2, jj, 0)
+                   z(indorbp + count, indt + 1) = z(indorbp + count, indt + 1) * powers(3, kk, 0)
+                   z(indorbp + count, indt + 1) = z(indorbp + count, indt + 1) * ii
 
-    !                z(indorbp + count - 1, indt + 2) = z(indorbp + count - 1, indt + 2) * powers(1, ii, 0)
-    !                z(indorbp + count - 1, indt + 2) = z(indorbp + count - 1, indt + 2) * powers(2, jj-1, 0)
-    !                z(indorbp + count - 1, indt + 2) = z(indorbp + count - 1, indt + 2) * powers(3, kk, 0)
-    !                z(indorbp + count - 1, indt + 2) = z(indorbp + count - 1, indt + 2) * jj
+                   z(indorbp + count, indt + 2) = z(indorbp + count, indt + 2) * powers(1, ii, 0)
+                   z(indorbp + count, indt + 2) = z(indorbp + count, indt + 2) * powers(2, jj-1, 0)
+                   z(indorbp + count, indt + 2) = z(indorbp + count, indt + 2) * powers(3, kk, 0)
+                   z(indorbp + count, indt + 2) = z(indorbp + count, indt + 2) * jj
 
-    !                z(indorbp + count - 1, indt + 3) = z(indorbp + count - 1, indt + 3) * powers(1, ii, 0)
-    !                z(indorbp + count - 1, indt + 3) = z(indorbp + count - 1, indt + 3) * powers(2, jj, 0)
-    !                z(indorbp + count - 1, indt + 3) = z(indorbp + count - 1, indt + 3) * powers(3, kk-1, 0)
-    !                z(indorbp + count - 1, indt + 3) = z(indorbp + count - 1, indt + 3) * kk
+                   z(indorbp + count, indt + 3) = z(indorbp + count, indt + 3) * powers(1, ii, 0)
+                   z(indorbp + count, indt + 3) = z(indorbp + count, indt + 3) * powers(2, jj, 0)
+                   z(indorbp + count, indt + 3) = z(indorbp + count, indt + 3) * powers(3, kk-1, 0)
+                   z(indorbp + count, indt + 3) = z(indorbp + count, indt + 3) * kk
 
-    !                z(indorbp + count - 1, indt + 4) = powers(1, ii-2, 0) * powers(2, jj, 0) * powers(3, kk, 0) * ii * (ii-1)&
-    !                                                & + powers(1, ii, 0) * powers(2, jj-2, 0) * powers(3, kk, 0) * jj * (jj-1)&
-    !                                                & + powers(1, ii, 0) * powers(2, jj, 0) * powers(3, kk-2, 0) * kk * (kk-1)
+                   z(indorbp + count, indt + 4) = powers(1, ii-2, 0) * powers(2, jj, 0) * powers(3, kk, 0) * ii * (ii-1)&
+                                              & + powers(1, ii, 0) * powers(2, jj-2, 0) * powers(3, kk, 0) * jj * (jj-1)&
+                                              & + powers(1, ii, 0) * powers(2, jj, 0) * powers(3, kk-2, 0) * kk * (kk-1)
 
-    !                
-    !                ! All polynomial parts are now stored
-    !                ! Now solve laplacian
-    !                z(indorbp + count - 1, indt + 4) = z(indorbp + count - 1, indtm + 4) * distp(1, 0) &
-    !                                               & + 2.0_8 * z(indorbp + count - 1, indt + 1) * distp(1, indt + 1) &
-    !                                               & + 2.0_8 * z(indorbp + count - 1, indt + 2) * distp(1, indt + 2) &
-    !                                               & + 2.0_8 * z(indorbp + count - 1, indt + 3) * distp(1, indt + 3) &
-    !                                               & + z(indorbp + count - 1, indtmin) * distp(1, indt + 4)
+                    
+                    ! All polynomial parts are now stored
+                    ! Now solve laplacian
+                    z(indorbp + count, indt + 4) = z(indorbp + count, indtm + 4) * distp(1, 0) &
+                                               & + 2.0_8 * z(indorbp + count, indt + 1) * distp(1, indt + 1) &
+                                               & + 2.0_8 * z(indorbp + count, indt + 2) * distp(1, indt + 2) &
+                                               & + 2.0_8 * z(indorbp + count, indt + 3) * distp(1, indt + 3) &
+                                               & + z(indorbp + count, indtmin) * distp(1, indt + 4)
 
-    !                ! Now solve gradients
-    !                z(indorbp + count - 1, indt + 1) = z(indorbp + count - 1, indt + 1) * distp(count, 0) &
-    !                                               & + z(indorbp, i0) * distp(1, indt + 1)
-    !                z(indorbp + count - 1, indt + 2) = z(indorbp + count - 1, indt + 2) * distp(count, 0) &
-    !                                               & + z(indorbp, i0) * distp(1, indt + 2)
-    !                z(indorbp + count - 1, indt + 3) = z(indorbp + count - 1, indt + 3) * distp(count, 0) &
-    !                                               & + z(indorbp, i0) * distp(1, indt + 3)
-    !                count = count + 1
-    !            end do
-    !        end do
+                    ! Now solve gradients
+                    z(indorbp + count, indt + 1) = z(indorbp + count, indt + 1) * distp(count + 1, 0) &
+                                               & + z(indorbp, i0) * distp(1, indt + 1)
+                    z(indorbp + count, indt + 2) = z(indorbp + count, indt + 2) * distp(count + 1, 0) &
+                                               & + z(indorbp, i0) * distp(1, indt + 2)
+                    z(indorbp + count, indt + 3) = z(indorbp + count, indt + 3) * distp(count + 1, 0) &
+                                               & + z(indorbp, i0) * distp(1, indt + 3)
+                    count = count + 1
+                end do
+            end do
         end if
 
     end if
