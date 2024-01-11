@@ -1,25 +1,23 @@
-subroutine provider_qmckl(point&
-                       &, ang_mom&
-                       &, par&
-                       &, values&
-                       &, multiplicity&
-                       &, gl)
+subroutine provider_pseudo_qmckl(indt&
+                              &, indtm&
+                              &, points&
+                              &, ang_mom&
+                              &, par&
+                              &, gl&
+                              &, multiplicity&
+                              &, values)
 
     use qmckl_helpers
 
     implicit none
 
-    integer(kind=4), intent(in) :: ang_mom
-    integer(kind=4), intent(in) :: multiplicity
-    integer(kind=4), intent(in) :: gl
-
-    real(kind=8), dimension(3), intent(in) :: point
-    real(kind=8), intent(in) :: par
+    integer*4, intent(in) :: indt, indtm, ang_mom, multiplicity, gl
+    real*8, intent(in) :: par
+    real*8, intent(in) :: points(3,indtm)
 
     ! If gl is 0 only values are computed
     ! If gl is 1 values gradients and laplacians are computed
-    ! this requires 5 times more space
-    real(kind=8), dimension(multiplicity * (1 + gl * 4)), intent(out) :: values
+    real*8, intent(inout) :: values((indt + 4 * gl) * multiplicity)
 
     integer(kind=4) :: rc
 
@@ -33,11 +31,50 @@ subroutine provider_qmckl(point&
     real(kind=8), dimension(1) :: prim_factor
     real(kind=8), dimension(:), allocatable :: ao_factor
 
+    integer(kind=8) :: ii, jj, kk, i
+
     integer(kind=8), dimension(1) :: nucleus_shell_num
     integer(kind=8), dimension(1) :: nucleus_index
     integer(kind=4), dimension(1) :: shell_ang_mom
     integer(kind=8), dimension(1) :: shell_prim_num
     integer(kind=8), dimension(1) :: shell_prim_index
+
+    real(kind=8), dimension(max(5, indtm*multiplicity)) :: tmp
+    real(kind=8), dimension(multiplicity) :: factorials
+    real(kind=8) :: rp1
+    integer(kind=8) :: count
+
+    !##############################################################################
+    !#                                                                            #
+    !#  Set up the factorials.                                                    #
+    !#                                                                            #
+    !##############################################################################
+
+
+    factorials = 1.0_8
+    count = 1
+    do ii = ang_mom, 0, -1
+        do jj = ang_mom - ii, 0, -1
+            kk = ang_mom - ii - jj
+            rp1 = 1.0_8
+            do i = ii + 1, 2 * ii
+                rp1 = rp1 * i
+            end do
+            factorials(count) = factorials(count) * rp1
+            rp1 = 1.0_8
+            do i = jj + 1, 2 * jj
+                rp1 = rp1 * i
+            end do
+            factorials(count) = factorials(count) * rp1
+            rp1 = 1.0_8
+            do i = kk + 1, 2 * kk
+                rp1 = rp1 * i
+            end do
+            factorials(count) = factorials(count) * rp1
+            count = count + 1
+        end do
+    end do
+  
 
     !##############################################################################
     !#                                                                            #
@@ -194,7 +231,13 @@ subroutine provider_qmckl(point&
         print *, "qmckl_set_ao_basis_ao_num succeeded"
     end if
 
-    ao_factor = 1.0_8
+    !ao_factor = (2/(3.14159265358))**(3.0_8/4_8)
+    do ii = 1, multiplicity
+        ao_factor(ii) = (2 * par / 3.14159265358)**0.75
+        ao_factor(ii) = ao_factor(ii) * dsqrt((8.0 * par)**ang_mom / factorials(ii))
+        print *, "ao_factor", ii, ao_factor(ii)
+        !ao_factor(ii) = ao_factor(ii) * dsqrt((8.0 * par)**ang_mom)
+    end do
     rc = qmckl_set_ao_basis_ao_factor(qmckl_ctx, ao_factor, 1_8 * multiplicity)
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_ao_factor failed"
@@ -210,18 +253,6 @@ subroutine provider_qmckl(point&
     !#                                                                            #
     !##############################################################################
 
-    rc = qmckl_set_point(qmckl_ctx&
-                       &, "N"&
-                       &, 1_8&
-                       &, point&
-                       &, 3_8)
-    if (rc /= 0) then
-        print *, "qmckl_set_point failed"
-        print *, "Error code", rc
-        stop 1
-    else
-        print *, "qmckl_set_point succeeded"
-    end if
 
     if (gl.eq.0) then 
         rc = qmckl_get_ao_basis_ao_value_inplace(qmckl_ctx&
@@ -235,17 +266,64 @@ subroutine provider_qmckl(point&
             print *, "qmckl_get_ao_basis_ao_value succeeded"
         end if
     else
-        rc = qmckl_get_ao_basis_ao_vgl_inplace(qmckl_ctx&
-                                            &, values&
-                                            &, 5_8 * multiplicity)
+        rc = qmckl_set_point(qmckl_ctx&
+                           &, "N"&
+                           &, 1_8 * (indtm - 1)&
+                           &, points(:,2:)&
+                           &, 3_8 * (indtm - 1))
         if (rc /= 0) then
-            write(*,*) "qmckl_get_ao_basis_vgl failed"
+            print *, "qmckl_set_point failed"
+            print *, "Error code", rc
             stop 1
         else
-            write(*,*) "qmckl_get_ao_basis_vgl succeeded"
+            print *, "qmckl_set_point succeeded"
         end if
+        rc = qmckl_get_ao_basis_ao_value_inplace(qmckl_ctx&
+                                              &, tmp&
+                                              &, 1_8 * indtm * multiplicity)
+        if (rc /= 0) then
+            write(*,*) "qmckl_get_ao_basis_ao_vgl failed"
+            stop 1
+        else
+            write(*,*) "qmckl_get_ao_basis_ao_vgl succeeded"
+        end if
+        count = 1
+        do jj = 2, indtm
+            do ii = 1, multiplicity
+                values((jj-1) * multiplicity + ii) = tmp(count)
+                count = count + 1
+            end do
+        end do
+        rc = qmckl_set_point(qmckl_ctx&
+                           &, "N"&
+                           &, 1_8&
+                           &, points(:,1)&
+                           &, 3_8)
+        if (rc /= 0) then
+            print *, "qmckl_set_point failed"
+            print *, "Error code", rc
+            stop 1
+        else
+            print *, "qmckl_set_point succeeded"
+        end if
+        rc = qmckl_get_ao_basis_ao_vgl_inplace(qmckl_ctx&
+                                            &, tmp&
+                                            &, 5_8 * multiplicity)
+        if (rc /= 0) then
+            write(*,*) "qmckl_get_ao_basis_ao_vgl failed"
+            stop 1
+        else
+            write(*,*) "qmckl_get_ao_basis_ao_vgl succeeded"
+        end if
+        do ii = 1, multiplicity
+            values(ii) = tmp(ii)
+            values((indt + 0) * multiplicity + ii) = tmp(multiplicity * 1 + ii)
+            values((indt + 1) * multiplicity + ii) = tmp(multiplicity * 2 + ii)
+            values((indt + 2) * multiplicity + ii) = tmp(multiplicity * 3 + ii)
+            values((indt + 3) * multiplicity + ii) = tmp(multiplicity * 4 + ii)
+        end do
     end if
 
     call qmckl_finalize()
 
-end subroutine provider_qmckl
+end subroutine provider_pseudo_qmckl
