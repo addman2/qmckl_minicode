@@ -231,12 +231,9 @@ subroutine provider_pseudo_qmckl(indt&
         print *, "qmckl_set_ao_basis_ao_num succeeded"
     end if
 
-    !ao_factor = (2/(3.14159265358))**(3.0_8/4_8)
     do ii = 1, multiplicity
         ao_factor(ii) = (2 * par / 3.14159265358)**0.75
         ao_factor(ii) = ao_factor(ii) * dsqrt((8.0 * par)**ang_mom / factorials(ii))
-        print *, "ao_factor", ii, ao_factor(ii)
-        !ao_factor(ii) = ao_factor(ii) * dsqrt((8.0 * par)**ang_mom)
     end do
     rc = qmckl_set_ao_basis_ao_factor(qmckl_ctx, ao_factor, 1_8 * multiplicity)
     if (rc /= 0) then

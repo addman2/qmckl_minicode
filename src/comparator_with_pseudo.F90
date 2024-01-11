@@ -9,12 +9,12 @@ program comparator
     real(kind=8) :: par
     real(kind=8), dimension(:), allocatable :: values_1, values_2, values_3
 
-    integer(kind=4) :: ang_mom, multiplicity, gl, indt, indtm
+    integer(kind=4) :: ang_mom, multiplicity, gl, indt, indtm, ii
 
     gl = 1_4
     indt = 8_4
     indtm = 6_4
-    ang_mom = 3
+    ang_mom = 2
     multiplicity = (ang_mom + 1) * (ang_mom + 2) / 2
 
     allocate(values_1((gl * 4 + indt) * multiplicity))
@@ -33,6 +33,9 @@ program comparator
     ! Setup point
     call random_number(point)
     point = point * 2.0d0 - 1.0d0
+    !do ii = 0, indtm
+    !    point(:, ii) = (/ 0.1d0, 0.2d0, 0.3d0 /)
+    !end do
 
     ! Setup parameters
     par = 2.0d0
