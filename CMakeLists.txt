@@ -97,7 +97,7 @@ foreach(EXECUTABLE IN LISTS EXECUTABLES)
     target_include_directories(${EXECUTABLE} PRIVATE ${QMCKL_INCLUDE_DIRS})
   endif()
 
-  if (QMCKL_FOUND)
+  if (QMCKL_GPU_FOUND)
     target_link_libraries(${EXECUTABLE} PRIVATE ${QMCKL_GPU_LIBRARIES})
     target_include_directories(${EXECUTABLE} PRIVATE ${QMCKL_GPU_INCLUDE_DIRS})
   endif()
