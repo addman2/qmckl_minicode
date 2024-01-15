@@ -21,6 +21,8 @@ subroutine provider_qmckl_gpu(point&
     ! this requires 5 times more space
     real(kind=8), dimension(multiplicity * (1 + gl * 4)), intent(out), target :: values
 
+#ifdef _QMCKL_GPU
+
     integer(kind=4) :: rc
 
     ! Here we are defining local varibales to hold the data that will be passed
@@ -357,5 +359,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp end target data
 
     call qmckl_gpu_finalize()
+
+#endif
 
 end subroutine provider_qmckl_gpu

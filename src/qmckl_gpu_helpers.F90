@@ -5,7 +5,7 @@ module qmckl_gpu_helpers
     use iso_c_binding
 
     implicit none
-
+#ifdef _QMCKL_GPU
     integer(kind=qmckl_context_device) :: qmckl_gpu_ctx
     integer(c_int32_t) :: qmckl_gpu_device_id
 
@@ -44,6 +44,7 @@ contains
         end if
 
     end subroutine qmckl_gpu_finalize
+#endif
 
 end module qmckl_gpu_helpers
 
