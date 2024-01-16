@@ -53,7 +53,7 @@ add_custom_command(
 
 list(APPEND EXECUTABLES qmckl_reader)
 list(APPEND EXECUTABLES comparator)
-list(APPEND EXECUTABLES comparator_with_pseudo)
+list(APPEND EXECUTABLES makefun_tester)
 
 add_library(turborvb_minicode_lib STATIC
     src/provider_qmckl.F90
