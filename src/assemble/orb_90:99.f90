@@ -5,16 +5,17 @@
 
     multiplicity = (iopt - 90 + 2) * (iopt - 90 + 1) / 2
 
+    powers(:,-2,:) = 0.0d0
+    powers(:,-1,:) = 0.0d0
     powers(:,0,:) = 1.0d0
 
-    do i = 1, max_power
+    do ii = 1, max_power
         do k = indtmin, indtm
-            powers(1, i, k) = powers(1, i-1, k) * rmu(1, k)
-            powers(2, i, k) = powers(2, i-1, k) * rmu(2, k)
-            powers(3, i, k) = powers(3, i-1, k) * rmu(3, k)
+            powers(1, ii, k) = powers(1, ii-1, k) * rmu(1, k)
+            powers(2, ii, k) = powers(2, ii-1, k) * rmu(2, k)
+            powers(3, ii, k) = powers(3, ii-1, k) * rmu(3, k)
         end do
     end do
-
 
     c = 0.712705470354990_8 * dd1 ** 0.75_8! * 2.829
     if (iopt - 90 .ne. 0) then
@@ -137,29 +138,47 @@
         else if (iopt - 90 .eq. 2) then
             rp1 = 2.0_8
             rp2 = dsqrt(12.0_8)
-            z(indorbp    , indt + 1) = (distp(indt + 1, 1) * rmu(1, indtmin) * rmu(1, indtmin)  + 2 * rmu(1, indtmin) * distp(0, 1)) / rp2
-            z(indorbp    , indt + 2) = (distp(indt + 2, 1) * rmu(1, indtmin) * rmu(1, indtmin)) / rp2
-            z(indorbp    , indt + 3) = (distp(indt + 3, 1) * rmu(1, indtmin) * rmu(1, indtmin)) / rp2
+            z(indorbp    , indt + 1) = (distp(indt + 1, 1) &
+                                    & * rmu(1, indtmin) * rmu(1, indtmin)  + 2 * rmu(1, indtmin) * distp(0, 1)) / rp2
+            z(indorbp    , indt + 2) = (distp(indt + 2, 1) &
+                                    & * rmu(1, indtmin) * rmu(1, indtmin)) / rp2
+            z(indorbp    , indt + 3) = (distp(indt + 3, 1) &
+                                    & * rmu(1, indtmin) * rmu(1, indtmin)) / rp2
 
-            z(indorbp + 1, indt + 1) = (distp(indt + 1, 1) * rmu(1, indtmin) * rmu(2, indtmin)  + rmu(2, indtmin) * distp(0, 1)) / rp1
-            z(indorbp + 1, indt + 2) = (distp(indt + 2, 1) * rmu(1, indtmin) * rmu(2, indtmin)  + rmu(1, indtmin) * distp(0, 1)) / rp1
-            z(indorbp + 1, indt + 3) = (distp(indt + 3, 1) * rmu(1, indtmin) * rmu(2, indtmin)) / rp1
+            z(indorbp + 1, indt + 1) = (distp(indt + 1, 1) &
+                                    & * rmu(1, indtmin) * rmu(2, indtmin)  + rmu(2, indtmin) * distp(0, 1)) / rp1
+            z(indorbp + 1, indt + 2) = (distp(indt + 2, 1) &
+                                    & * rmu(1, indtmin) * rmu(2, indtmin)  + rmu(1, indtmin) * distp(0, 1)) / rp1
+            z(indorbp + 1, indt + 3) = (distp(indt + 3, 1) &
+                                    & * rmu(1, indtmin) * rmu(2, indtmin)) / rp1
 
-            z(indorbp + 2, indt + 1) = (distp(indt + 1, 1) * rmu(1, indtmin) * rmu(3, indtmin)  + rmu(3, indtmin) * distp(0, 1)) / rp1
-            z(indorbp + 2, indt + 2) = (distp(indt + 2, 1) * rmu(1, indtmin) * rmu(3, indtmin)) / rp1
-            z(indorbp + 2, indt + 3) = (distp(indt + 3, 1) * rmu(1, indtmin) * rmu(3, indtmin)) + rmu(1, indtmin) * distp(0, 1)/ rp1
+            z(indorbp + 2, indt + 1) = (distp(indt + 1, 1) &
+                                    & * rmu(1, indtmin) * rmu(3, indtmin)  + rmu(3, indtmin) * distp(0, 1)) / rp1
+            z(indorbp + 2, indt + 2) = (distp(indt + 2, 1) &
+                                    & * rmu(1, indtmin) * rmu(3, indtmin)) / rp1
+            z(indorbp + 2, indt + 3) = (distp(indt + 3, 1) &
+                                    & * rmu(1, indtmin) * rmu(3, indtmin)) + rmu(1, indtmin) * distp(0, 1)/ rp1
 
-            z(indorbp + 3, indt + 1) = (distp(indt + 1, 1) * rmu(2, indtmin) * rmu(2, indtmin)) / rp2
-            z(indorbp + 3, indt + 2) = (distp(indt + 2, 1) * rmu(2, indtmin) * rmu(2, indtmin)  + 2 * rmu(2, indtmin) * distp(0, 1)) / rp2
-            z(indorbp + 3, indt + 3) = (distp(indt + 3, 1) * rmu(2, indtmin) * rmu(2, indtmin)) / rp2
+            z(indorbp + 3, indt + 1) = (distp(indt + 1, 1) &
+                                    & * rmu(2, indtmin) * rmu(2, indtmin)) / rp2
+            z(indorbp + 3, indt + 2) = (distp(indt + 2, 1) &
+                                    & * rmu(2, indtmin) * rmu(2, indtmin)  + 2 * rmu(2, indtmin) * distp(0, 1)) / rp2
+            z(indorbp + 3, indt + 3) = (distp(indt + 3, 1) &
+                                    & * rmu(2, indtmin) * rmu(2, indtmin)) / rp2
 
-            z(indorbp + 4, indt + 1) = (distp(indt + 1, 1) * rmu(2, indtmin) * rmu(3, indtmin)) / rp1
-            z(indorbp + 4, indt + 2) = (distp(indt + 2, 1) * rmu(2, indtmin) * rmu(3, indtmin)  + rmu(3, indtmin) * distp(0, 1)) / rp1
-            z(indorbp + 4, indt + 3) = (distp(indt + 3, 1) * rmu(2, indtmin) * rmu(3, indtmin)  + rmu(2, indtmin) * distp(0, 1)) / rp1
+            z(indorbp + 4, indt + 1) = (distp(indt + 1, 1) &
+                                    & * rmu(2, indtmin) * rmu(3, indtmin)) / rp1
+            z(indorbp + 4, indt + 2) = (distp(indt + 2, 1) &
+                                    & * rmu(2, indtmin) * rmu(3, indtmin)  + rmu(3, indtmin) * distp(0, 1)) / rp1
+            z(indorbp + 4, indt + 3) = (distp(indt + 3, 1) &
+                                    & * rmu(2, indtmin) * rmu(3, indtmin)  + rmu(2, indtmin) * distp(0, 1)) / rp1
 
-            z(indorbp + 5, indt + 1) = (distp(indt + 1, 1) * rmu(3, indtmin) * rmu(3, indtmin)) / rp2
-            z(indorbp + 5, indt + 2) = (distp(indt + 2, 1) * rmu(3, indtmin) * rmu(3, indtmin)) / rp2
-            z(indorbp + 5, indt + 3) = (distp(indt + 3, 1) * rmu(3, indtmin) * rmu(3, indtmin)  + 2 * rmu(3, indtmin) * distp(0, 1)) / rp2
+            z(indorbp + 5, indt + 1) = (distp(indt + 1, 1) &
+                                    & * rmu(3, indtmin) * rmu(3, indtmin)) / rp2
+            z(indorbp + 5, indt + 2) = (distp(indt + 2, 1) &
+                                    & * rmu(3, indtmin) * rmu(3, indtmin)) / rp2
+            z(indorbp + 5, indt + 3) = (distp(indt + 3, 1) &
+                                    & * rmu(3, indtmin) * rmu(3, indtmin)  + 2 * rmu(3, indtmin) * distp(0, 1)) / rp2
 
             z(indorbp    , indt + 4) = (1.0d0 * distp(indt + 4, 1) * rmu(1, indtmin) * rmu(1, indtmin)&
                                    & +  4.0d0 * distp(indt + 1, 1) * rmu(1, indtmin)&

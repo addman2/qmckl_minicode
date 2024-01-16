@@ -1,3 +1,9 @@
+#ifdef _OLD_QMCKL_GPU_INTERFACE
+#define PTR_C(argument) c_loc(argument)
+#else
+#define PTR_C(argument) argument
+#endif
+
 subroutine provider_qmckl_gpu(point&
                            &, ang_mom&
                            &, par&
@@ -84,7 +90,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(charges)
 
     !$omp target data use_device_ptr(charges)
-    rc = qmckl_set_nucleus_charge_device(qmckl_gpu_ctx, c_loc(charges), 1_8)
+    rc = qmckl_set_nucleus_charge_device(qmckl_gpu_ctx, PTR_C(charges), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_nucleus_charge failed"
@@ -99,7 +105,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(charges)
 
     !$omp target data use_device_ptr(charges)
-    rc = qmckl_get_nucleus_charge_device(qmckl_gpu_ctx, c_loc(charges), 1_8)
+    rc = qmckl_get_nucleus_charge_device(qmckl_gpu_ctx, PTR_C(charges), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_get_nucleus_charge failed"
@@ -120,7 +126,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(positions)
 
     !$omp target data use_device_ptr(positions)
-    rc = qmckl_set_nucleus_coord_device(qmckl_gpu_ctx, "N", c_loc(positions), 3_8 * size(positions))
+    rc = qmckl_set_nucleus_coord_device(qmckl_gpu_ctx, "N", PTR_C(positions), 3_8 * size(positions))
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_nucleus_cood failed"
@@ -163,7 +169,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(nucleus_shell_num)
 
     !$omp target data use_device_ptr(nucleus_shell_num)
-    rc = qmckl_set_ao_basis_nucleus_shell_num_device(qmckl_gpu_ctx, c_loc(nucleus_shell_num), 1_8)
+    rc = qmckl_set_ao_basis_nucleus_shell_num_device(qmckl_gpu_ctx, PTR_C(nucleus_shell_num), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_nucleus_shell_num failed"
@@ -176,7 +182,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(nucleus_index)
 
     !$omp target data use_device_ptr(nucleus_index)
-    rc = qmckl_set_ao_basis_nucleus_index_device(qmckl_gpu_ctx, c_loc(nucleus_index), 1_8)
+    rc = qmckl_set_ao_basis_nucleus_index_device(qmckl_gpu_ctx, PTR_C(nucleus_index), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_nucleus_index failed"
@@ -189,7 +195,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(shell_ang_mom)
 
     !$omp target data use_device_ptr(shell_ang_mom)
-    rc = qmckl_set_ao_basis_shell_ang_mom_device(qmckl_gpu_ctx, c_loc(shell_ang_mom), 1_8)
+    rc = qmckl_set_ao_basis_shell_ang_mom_device(qmckl_gpu_ctx, PTR_C(shell_ang_mom), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_shell_ang_mom failed"
@@ -202,7 +208,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(shell_prim_num)
     
     !$omp target data use_device_ptr(shell_prim_num)
-    rc = qmckl_set_ao_basis_shell_prim_num_device(qmckl_gpu_ctx, c_loc(shell_prim_num), 1_8)
+    rc = qmckl_set_ao_basis_shell_prim_num_device(qmckl_gpu_ctx, PTR_C(shell_prim_num), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_shell_prim_num failed"
@@ -215,7 +221,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(shell_prim_index)
 
     !$omp target data use_device_ptr(shell_prim_index)
-    rc = qmckl_set_ao_basis_shell_prim_index_device(qmckl_gpu_ctx, c_loc(shell_prim_index), 1_8)
+    rc = qmckl_set_ao_basis_shell_prim_index_device(qmckl_gpu_ctx, PTR_C(shell_prim_index), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_shell_prim_index failed"
@@ -228,7 +234,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(shell_factor)
 
     !$omp target data use_device_ptr(shell_factor)
-    rc = qmckl_set_ao_basis_shell_factor_device(qmckl_gpu_ctx, c_loc(shell_factor), 1_8)
+    rc = qmckl_set_ao_basis_shell_factor_device(qmckl_gpu_ctx, PTR_C(shell_factor), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_shell_factor failed"
@@ -241,7 +247,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(exponent)
 
     !$omp target data use_device_ptr(exponent)
-    rc = qmckl_set_ao_basis_exponent_device(qmckl_gpu_ctx, c_loc(exponent), 1_8)
+    rc = qmckl_set_ao_basis_exponent_device(qmckl_gpu_ctx, PTR_C(exponent), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_exponent failed"
@@ -254,7 +260,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(coefficient)
 
     !$omp target data use_device_ptr(coefficient)
-    rc = qmckl_set_ao_basis_coefficient_device(qmckl_gpu_ctx, c_loc(coefficient), 1_8)
+    rc = qmckl_set_ao_basis_coefficient_device(qmckl_gpu_ctx, PTR_C(coefficient), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_coefficient failed"
@@ -267,7 +273,7 @@ subroutine provider_qmckl_gpu(point&
     !$omp target update to(prim_factor)
     
     !$omp target data use_device_ptr(prim_factor)
-    rc = qmckl_set_ao_basis_prim_factor_device(qmckl_gpu_ctx, c_loc(prim_factor), 1_8)
+    rc = qmckl_set_ao_basis_prim_factor_device(qmckl_gpu_ctx, PTR_C(prim_factor), 1_8)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_prim_factor failed"
@@ -289,7 +295,7 @@ subroutine provider_qmckl_gpu(point&
     end if
 
     !$omp target data use_device_ptr(ao_factor)
-    rc = qmckl_set_ao_basis_ao_factor_device(qmckl_gpu_ctx, c_loc(ao_factor), 1_8 * multiplicity)
+    rc = qmckl_set_ao_basis_ao_factor_device(qmckl_gpu_ctx, PTR_C(ao_factor), 1_8 * multiplicity)
     !$omp end target data
     if (rc /= 0) then
         print *, "qmckl_set_ao_basis_ao_factor failed"
@@ -311,7 +317,7 @@ subroutine provider_qmckl_gpu(point&
     rc = qmckl_set_point_device(qmckl_gpu_ctx&
                              &, "N"&
                              &, 1_8&
-                             &, c_loc(point)&
+                             &, PTR_C(point)&
                              &, 3_8)
     !$omp end target data
     if (rc /= 0) then
@@ -327,7 +333,7 @@ subroutine provider_qmckl_gpu(point&
 
         !$omp target data use_device_ptr(values)
         rc = qmckl_get_ao_basis_ao_value_device(qmckl_gpu_ctx&
-                                              &, c_loc(values)&
+                                              &, PTR_C(values)&
                                               &, 1_8 * multiplicity)
         !$omp end target data
         !$omp end target data
@@ -343,7 +349,7 @@ subroutine provider_qmckl_gpu(point&
 
         !$omp target data use_device_ptr(values)
         rc = qmckl_get_ao_basis_ao_vgl_device(qmckl_gpu_ctx&
-                                            &, c_loc(values)&
+                                            &, PTR_C(values)&
                                             &, 5_8 * multiplicity)
         !$omp end target data
         !$omp end target data

@@ -22,6 +22,10 @@ message(STATUS "OpenMP Fortran flags: ${OpenMP_Fortran_FLAGS}")
 # Set preprocessor directives
 set(PPDIRECTIVES "")
 
+if (OLD_QMCKL_GPU_INTERFACE)
+    list( APPEND PPDIRECTIVES _OLD_QMCKL_GPU_INTERFACE )
+endif()
+
 find_package(TREXIO)
 if (TREXIO_FOUND)
     list( APPEND PPDIRECTIVES _TREXIO )
