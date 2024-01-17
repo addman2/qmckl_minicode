@@ -1,3 +1,12 @@
+  ! cartesian orbitals
+  ! 
+  ! - angmom := iopt - 90
+  ! - type = Gaussian
+  ! - normalized = yes
+  ! - angtype = cartesian
+  ! - npar = 1
+  ! - multiplicity := (iopt - 90 + 2) * (iopt - 90  + 1) // 2
+  !
 
     indshellp=indshell+1
     indorbp=indorb+1
