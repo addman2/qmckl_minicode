@@ -4,6 +4,15 @@ import re
 
 to_stdout = True
 
+def iopt_generator(iopt):
+    for x in iopt.replace(" ","").split(','):
+        if ":" in x:
+            a, b = x.split(':')
+            for i in range(int(a), int(b)+1):
+                yield str(i)
+        else:
+            yield x
+
 class Csv_info:
 
     def __init__(self):
@@ -20,11 +29,9 @@ class Csv_info:
 
         for line in lines:
             for k in data:
-                print(k, line.strip())
-                m = re.match(r'^\s*-\s+'+ k.replace("_", "") +'\s*=\s*(.+)\s*$', line)
+                m = re.match(r'^\s*-\s+'+ k.replace("_", "") +'\s*:?=\s*(.+)\s*$', line)
                 if m:
-                    print("match")
-                    data[k] = m.group(1)
+                    data[k] = f"{':' if ':=' in line else ''}{m.group(1)}"
 
         if data['angmom'] is None:
             return
@@ -33,9 +40,15 @@ class Csv_info:
         if data['multiplicity'] is None:
             return
 
-        data['iopt'] = iopt
+        for iopt_ in iopt_generator(iopt):
+            data_copy = data.copy()
+            data_copy['iopt'] = iopt_
+            for k in data_copy:
+                if data_copy[k].startswith(':'):
+                    # execute python code, setting local variables
+                    data_copy[k] = eval(data_copy[k][1:], dict(iopt=int(iopt_)))
 
-        self.csvs.append(data)
+            self.csvs.append(data_copy)
 
 csv_info = Csv_info()
 
@@ -76,7 +89,6 @@ with open('makefun_out.f90', 'w') as f:
     f.write(footer)
 
 # Assemble makefun_out.csv
-print(csv_info.csvs)
 header = "iopt,angmom,type_,normalized,angtype,multiplicity,npar"
 with open('makefun_out.csv', 'w') as f:
     f.write(f'{header.replace("-","")}\n')

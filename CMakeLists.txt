@@ -53,6 +53,7 @@ add_custom_command(
 
 list(APPEND EXECUTABLES qmckl_reader)
 list(APPEND EXECUTABLES comparator)
+list(APPEND EXECUTABLES comparator_with_pseudo)
 list(APPEND EXECUTABLES makefun_tester)
 
 add_library(turborvb_minicode_lib STATIC
@@ -134,6 +135,7 @@ enable_testing()
 add_subdirectory(tests/reader)
 add_subdirectory(tests/comparator)
 add_subdirectory(tests/comparator_with_pseudo)
+add_subdirectory(tests/makefun_tester)
 #add_subdirectory(tests/gpu_cpu_compare)
 
 if (NOT ${OFFLOAD_FLAGS} STREQUAL "")

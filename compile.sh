@@ -11,5 +11,5 @@ cmake -S . -B ${BUILD_DIR} -DCMAKE_C_COMPILER=nvc \
 
 cmake --build ${BUILD_DIR} --verbose
 #ctest --test-dir build -VV -R "ComparatorWithoutPseudo"
-#ctest --test-dir ${BUILD_DIR} -VV
-${BUILD_DIR}/comparator
+ctest --test-dir ${BUILD_DIR} -VV
+#${BUILD_DIR}/comparator
