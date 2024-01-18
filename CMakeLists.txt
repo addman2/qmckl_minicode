@@ -69,6 +69,7 @@ add_library(turborvb_minicode_lib STATIC
     src/trexio.F90
     src/qmckl_helpers.F90
     src/qmckl_gpu_helpers.F90
+    src/c_lister.c
     ${CMAKE_CURRENT_BINARY_DIR}/makefun.F90
     )
 
