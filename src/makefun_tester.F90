@@ -67,15 +67,10 @@ program makefun_tester
     end do
     close(10)
 
-    multiplicities(2) = multiplicities(2) + 1
-    multiplicities(3) = multiplicities(3) + 1
-    multiplicities(4) = multiplicities(4) + 1
-    
     do ii = 1, num_lines
         failed = .false.
         write(*,'("Checking orbital index ", I3)') iorbs(ii)
         write(*, *)
-        write(*, *) "random_string(10) = ", random_string(10)
     
         if (allocated(dd)) deallocate(dd)
         allocate(dd(npars(ii)))
@@ -92,9 +87,11 @@ program makefun_tester
         if (allocated(distp)) deallocate(distp)
         allocate(distp(0:indt+4,20))
     
-        !call check_index_movement()
         !call create_single_value()
-        call test_single_value()
+        !call create_svgl_value()
+        call check_index_movement()
+        call check_single_value()
+        call check_svgl_value()
 
         if (failed) then
             failed_test(ii) = 1
@@ -141,7 +138,7 @@ function random_string(length) result(str)
     integer, intent(in) :: length
     character(len=length) :: str
     integer :: i
-    real :: r
+    real*8 :: r
     character(len=29) :: letters = 'abcdefghijklmnopqrstuvwxyz148'
 
     do i = 1, length
@@ -206,6 +203,8 @@ subroutine check_index_movement
 
     implicit none
 
+    write(*, '(A)') 'Test: index movement'
+
     failed = .false.
 
     ! Generate random points
@@ -229,7 +228,7 @@ subroutine check_index_movement
                &,indorb,indshell,multiplicities(ii),z,dd,zeta,r,rmu,distp    &
                &,iflagnorm_unused,cr)
 
-    write(*,'("indorb  = ",I3)', advance="no") indorb
+    write(*,'("indorb   = ",I3)', advance="no") indorb
     if (indorb /= multiplicities(ii)) then
         write(*,'(" FAILED")')
         failed = .true.
@@ -245,7 +244,7 @@ subroutine check_index_movement
         write(*,'(" OK")')
     end if
 
-    write(*,'("indpar  = ",I3)', advance="no") indpar
+    write(*,'("indpar   = ",I3)', advance="no") indpar
     if (indpar /= npars(ii)) then
         write(*,'(" FAILED")')
         failed = .true.
@@ -253,7 +252,49 @@ subroutine check_index_movement
         write(*,'(" OK")')
     end if
 
+    write(*, *)
+
 end subroutine check_index_movement
+
+subroutine create_svgl_value
+
+    implicit none
+    character*80 :: filename
+
+    ! Generate random points
+    call random_number(rmu)
+    rmu = rmu * 4.0d0 - 2.0d0
+    
+    r = sqrt(sum(rmu**2, dim=1))
+    
+    ! Randomize parameters
+    call random_number(dd)
+
+    i0 = 0
+    indtmin = 0
+    indpar = 0
+    indorb = 0
+    indshell = 0
+    typec = 0
+    z = 0.0d0
+
+    call makefun(iorbs(ii),0,i0,indtmin,0,typec,indpar      &
+               &,indorb,indshell,multiplicities(ii),z,dd,zeta,r,rmu,distp    &
+               &,iflagnorm_unused,cr)
+
+    ! In a binary file data/sv.dat we store the following data:
+    ! 1. iorbs(ii)
+    ! 2. dd array
+    ! 3. rmu array
+
+    write(filename, '(A,I3.3,A,A,A,A)') 'data/svgl_', iorbs(ii), "_", random_string(15), '.dat'
+    open(unit=20, file=filename, form='unformatted', status='replace', action='write')
+    write(20) dd
+    write(20) rmu(:,0)
+    write(20) z(:, 0:3)
+    close(20)
+
+end subroutine create_svgl_value
 
 subroutine create_single_value
 
@@ -271,7 +312,6 @@ subroutine create_single_value
 
     i0 = 0
     indtmin = 0
-    typec = 0
     indpar = 0
     indorb = 0
     indshell = 0
@@ -288,70 +328,135 @@ subroutine create_single_value
     ! 3. rmu array
 
     write(filename, '(A,I3.3,A,A,A,A)') 'data/sv_', iorbs(ii), "_", random_string(15), '.dat'
-    open(unit=20, file=filename, form='unformatted', access='sequential', status='new', action='write')
+    open(unit=20, file=filename, form='unformatted', status='replace', action='write')
     write(20) dd
     write(20) rmu(:,0)
-    write(20) z(0:multiplicities(ii), 0)
+    write(20) z(:, 0)
     close(20)
 
 end subroutine create_single_value
 
-subroutine test_single_value
+subroutine check_single_value
 
     implicit none
 
     character :: files(MAX_FILE_LENGTH, MAX_FILES)
     character*MAX_FILE_LENGTH :: filename
-    integer :: num_files, i, j, iorb_test, ios
-    real :: z_test(0:multiplicities(ii), 0)
+    integer*4 :: num_files, i, j, iorb_test, ios, count_tests, count_failed
+    real*8 :: z_test(multiplicities(ii), 0:0)
+
+    write(*, '(A)') 'Test: single value'
 
     call list_directory('data', 4, files, num_files, 'sv_', 3)
-    print *, "num_files = ", num_files
     
+    count_tests = 0
+    count_failed = 0
     do i = 1, num_files
         do j = 1, MAX_FILE_LENGTH
             filename(j:j) = files(j,i)
         end do
-        write(*, '(I3," ",A)') i, adjustl(trim(filename))
         
         read(filename(4:6), '(I3)', iostat=ios ) iorb_test
         if (ios /= 0) then
-            continue
+            cycle
         end if
         if (iorb_test /= iorbs(ii)) then
-            continue
+            cycle
+        else
         end if
-        open(unit=20, file='data/'//trim(filename), form='unformatted', access='sequential', status='old', action='read')
-        do j = 1, 1
-            read(20) dd(j)
-        end do
-        read(20) rmu(1,0)
-        read(20) rmu(2,0)
-        read(20) rmu(3,0)
-        !read(20) z_test(0:multiplicities(ii), 0)
+
+        open(unit=20, file='data/'//trim(filename), form='unformatted', status='old', action='read')
+        read(20) dd
+        read(20) rmu(:,0)
+        read(20) z_test(:, 0)
         close(20)
 
-        !write(*, '(A)') "dd = ", dd
+        i0 = 0
+        indtmin = 0
+        typec = 1
+        indpar = 0
+        indorb = 0
+        indshell = 0
+        r = sqrt(sum(rmu**2, dim=1))
+        z = 0.0d0
 
-        !i0 = 0
-        !indtmin = 0
-        !typec = 0
-        !indpar = 0
-        !indorb = 0
-        !indshell = 0
-        !z = 0.0d0
+        call makefun(iorbs(ii),indt,i0,indtmin,0,typec,indpar      &
+                   &,indorb,indshell,multiplicities(ii),z,dd,zeta,r,rmu,distp    &
+                   &,iflagnorm_unused,cr)
 
-        !call makefun(iorbs(ii),indt,i0,indtmin,0,typec,indpar      &
-        !           &,indorb,indshell,multiplicities(ii),z,dd,zeta,r,rmu,distp    &
-        !           &,iflagnorm_unused,cr)
-
-
-
-        !write(*, '(A)') "z_test = ", z_test
-        !write(*, '(A)') "z = ", z(0:multiplicities(ii), 0)
+        if (any(abs(z_test - z) > 1.0d-10)) then
+            failed = .true.
+            count_failed = count_failed + 1
+        end if
+        count_tests = count_tests + 1
 
     end do
 
-end subroutine test_single_value
+    write(*, '("tests/failed = ",I3, "/",I3)') count_tests, count_failed
+    write(*, *)
+
+end subroutine check_single_value
+
+subroutine check_svgl_value
+
+    implicit none
+
+    character :: files(MAX_FILE_LENGTH, MAX_FILES)
+    character*MAX_FILE_LENGTH :: filename
+    integer*4 :: num_files, i, j, iorb_test, ios, count_tests, count_failed
+    real*8 :: z_test(multiplicities(ii), 0:3)
+    character(*), parameter :: prefix = 'svgl_'
+
+    write(*, '(A)') 'Test: single value gradient and laplacian'
+
+    call list_directory('data', 4, files, num_files, prefix, len_trim(prefix))
+    
+    count_tests = 0
+    count_failed = 0
+    do i = 1, num_files
+        do j = 1, MAX_FILE_LENGTH
+            filename(j:j) = files(j,i)
+        end do
+        
+        read(filename(len_trim(prefix)+1:len_trim(prefix)+3), '(I3)', iostat=ios ) iorb_test
+        if (ios /= 0) then
+            cycle
+        end if
+        if (iorb_test /= iorbs(ii)) then
+            cycle
+        else
+        end if
+
+        open(unit=20, file='data/'//trim(filename), form='unformatted', status='old', action='read')
+        read(20) dd
+        read(20) rmu(:,0)
+        read(20) z_test(:, 0:3)
+        close(20)
+
+        i0 = 0
+        indtmin = 0
+        typec = 0
+        indpar = 0
+        indorb = 0
+        indshell = 0
+        r = sqrt(sum(rmu**2, dim=1))
+        z = 0.0d0
+
+        call makefun(iorbs(ii),0,i0,indtmin,0,typec,indpar      &
+                   &,indorb,indshell,multiplicities(ii),z,dd,zeta,r,rmu,distp    &
+                   &,iflagnorm_unused,cr)
+
+        if (any(abs(z_test(:,0:3) - z(:,0:3)) > 1.0d-10)) then
+            failed = .true.
+            count_failed = count_failed + 1
+        end if
+        count_tests = count_tests + 1
+
+    end do
+
+    write(*, '("tests/failed = ",I3, "/",I3)') count_tests, count_failed
+    write(*, *)
+
+end subroutine check_svgl_value
 
 end program makefun_tester
