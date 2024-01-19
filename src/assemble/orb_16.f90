@@ -1,11 +1,18 @@
-  ! R(r)=exp(-z*r**2) single zeta
+  ! s orbital
+  ! 
+  ! - angmom = 0
+  ! - type = Gaussian
+  ! - normalized = yes
+  ! - angtype = spherical
+  ! - npar = 1
+  ! - multiplicity = 1
+  !
 
   indshellp=indshell+1
   indorbp=indorb+1
   dd1=dd(indpar+1)
 
   if(dd1.ne.0.) then
-    ! c=(2.d0*dd1/pi)**(3.d0/4.d0)
     c=0.71270547035499016d0*dd1**0.75d0
   else
     c=1.d0
@@ -33,6 +40,7 @@
     z(indorbp,indt+4)=2.d0*fun+fun2
 
     if(typec.eq.2) then
+      ! Backflow
       funb=(fun2-fun)/(r(0)*r(0))
 
       z(indorbp,indt+5)=funb*rmu(1,0)*rmu(1,0)+fun
@@ -43,12 +51,9 @@
       z(indorbp,indt+10)=funb*rmu(2,0)*rmu(3,0)
 
     end if
-
-
   end if
 
   indorb=indorbp
-
   indpar=indpar+1
   indshell=indshellp
 

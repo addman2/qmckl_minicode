@@ -5,7 +5,7 @@ module qmckl_gpu_helpers
     use iso_c_binding
 
     implicit none
-
+#ifdef _QMCKL_GPU
     integer(kind=qmckl_context_device) :: qmckl_gpu_ctx
     integer(c_int32_t) :: qmckl_gpu_device_id
 
@@ -18,7 +18,7 @@ contains
 
         integer(kind=4) :: rc
 
-        qmckl_gpu_ctx = qmckl_context_create_device(qmckl_context_device)
+        qmckl_gpu_ctx = qmckl_context_create_device(qmckl_gpu_device_id)
         if (qmckl_gpu_ctx.eq.0_8) then
             write (0,*) "QMCKL GPU context is a null pointer, but it should never happen"
             stop 1
@@ -44,6 +44,7 @@ contains
         end if
 
     end subroutine qmckl_gpu_finalize
+#endif
 
 end module qmckl_gpu_helpers
 

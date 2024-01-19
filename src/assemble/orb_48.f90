@@ -1,24 +1,21 @@
-  ! f single gaussian orbital
-  ! R(r)= exp(-alpha r^2)
-  ! normalized
+  ! f orbital
+  ! 
+  ! - angmom = 3
+  ! - type = Gaussian
+  ! - normalized = yes
+  ! - angtype = spherical
+  ! - npar = 1
+  ! - multiplicity = 7
+  !
 
-
-  !        indorbp=indorb
   indparp=indpar+1
-
   dd1=dd(indparp)
 
-  !        if(iflagnorm.gt.2) then
-  ! overall normalization
-  !        c=8.d0/dsqrt(15.d0)*(2.d0/pi)**(3.d0/4.d0)*dd1**(9.d0/4.d0)
   c=dd1**2.25d0*1.47215808929909374563d0
-  !        endif
-
 
   do k=indtmin,indtm
     distp(k,1)=c*dexp(-dd1*r(k)**2)
   end do
-
 
   do i=indtmin,indtm
     distp(i,2)=cost1f*rmu(3,i)                                       &
@@ -44,14 +41,11 @@
     ! lz=+/-3
   end do
 
-
   do ic=1,7
-    !           if(iocc(indshell+ic).eq.1) then
     indorbp=indorb+ic
     do k=i0,indtm
       z(indorbp,k)=distp(k,1)*distp(k,1+ic)
     end do
-    !           endif
   end do
 
 
@@ -62,10 +56,7 @@
     fun=-2.d0*dd1*distp(0,1)
     fun2=fun*(1.d0-2.d0*dd1*r(0)**2)
 
-
-    !              indorbp=indorb
     do ic=1,7
-      !                 if(iocc(indshell+ic).eq.1) then
       indorbp=indorb+ic
       do i=1,3
         z(indorbp,indt+i)=distp(0,1+ic)*rmu(i,0)                     &
@@ -118,18 +109,10 @@
             3.d0*cost4f*fun0*(rmu(1,0)**2-rmu(2,0)**2)
       end if
       z(indorbp,indt+4)=distp(0,1+ic)*(8.d0*fun+fun2)
-      !endif for iocc
-      !                endif
-      ! enddo fot ic
     end do
-
-
-    !endif for indt
   end if
 
   indpar=indpar+1
   indshell=indshell+7
   indorb=indorbp
 
-
-  ! derivative of 48 with respect to z

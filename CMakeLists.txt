@@ -22,6 +22,10 @@ message(STATUS "OpenMP Fortran flags: ${OpenMP_Fortran_FLAGS}")
 # Set preprocessor directives
 set(PPDIRECTIVES "")
 
+if (OLD_QMCKL_GPU_INTERFACE)
+    list( APPEND PPDIRECTIVES _OLD_QMCKL_GPU_INTERFACE )
+endif()
+
 find_package(TREXIO)
 if (TREXIO_FOUND)
     list( APPEND PPDIRECTIVES _TREXIO )
@@ -48,14 +52,25 @@ add_custom_command(
     )
 
 list(APPEND EXECUTABLES qmckl_reader)
+list(APPEND EXECUTABLES comparator)
+list(APPEND EXECUTABLES comparator_with_pseudo)
+list(APPEND EXECUTABLES makefun_tester)
 
 add_library(turborvb_minicode_lib STATIC
+    src/provider_qmckl.F90
+    src/provider_qmckl_gpu.F90
+    src/provider_makefun.F90
+    src/provider_pseudo_makefun.F90
+    src/provider_pseudo_makefun_old.F90
+    src/provider_pseudo_qmckl.F90
     src/constants.F90
     src/qmckl.F90
     src/qmckl_gpu.F90
     src/trexio.F90
     src/qmckl_helpers.F90
     src/qmckl_gpu_helpers.F90
+    src/c_lister.h
+    src/c_lister.c
     ${CMAKE_CURRENT_BINARY_DIR}/makefun.F90
     )
 
@@ -73,7 +88,7 @@ message(STATUS "Preprocessor directives: ${PPDIRECTIVES}")
 list(APPEND EXECUTABLES turborvb_minicode_lib)
 
 foreach(EXECUTABLE IN LISTS EXECUTABLES)
-  set_target_properties(${EXECUTABLE} PROPERTIES LINK_FLAGS "-g -O0")
+  set_target_properties(${EXECUTABLE} PROPERTIES LINK_FLAGS "-g -O0 ${OpenMP_Fortran_FLAGS}")
 
   if (OpenMP_Fortran_FOUND)
     #target_link_libraries(${EXECUTABLE} PRIVATE OpenMP::OpenMP_Fortran)
@@ -89,7 +104,7 @@ foreach(EXECUTABLE IN LISTS EXECUTABLES)
     target_include_directories(${EXECUTABLE} PRIVATE ${QMCKL_INCLUDE_DIRS})
   endif()
 
-  if (QMCKL_FOUND)
+  if (QMCKL_GPU_FOUND)
     target_link_libraries(${EXECUTABLE} PRIVATE ${QMCKL_GPU_LIBRARIES})
     target_include_directories(${EXECUTABLE} PRIVATE ${QMCKL_GPU_INCLUDE_DIRS})
   endif()
@@ -120,6 +135,9 @@ enable_testing()
 #add_subdirectory(tests/with_qmckl_h)
 #add_subdirectory(tests/makefun)
 add_subdirectory(tests/reader)
+add_subdirectory(tests/comparator)
+add_subdirectory(tests/comparator_with_pseudo)
+add_subdirectory(tests/makefun_tester)
 #add_subdirectory(tests/gpu_cpu_compare)
 
 if (NOT ${OFFLOAD_FLAGS} STREQUAL "")

@@ -1,0 +1,53 @@
+ # Nelup  #Nel  # Ion 
+           1           1           1
+ # Shell Det.   # Shell Jas. 
+           4           0
+ # Jas 2body  # Det   #  3 body atomic par.  
+           0          26           0
+ # Det mat. =/0  # Jas mat. =/0  
+           1           0
+  # Eq. Det atomic par.  # Eq. 3 body atomic. par.
+           6           0
+ # unconstrained iesfree,iessw,ieskinr,I/O flag 
+           0           1           0           0
+ # Ion coordinates 
+   1.0000000000000000        1.0100000000000000        0.0000000000000000        0.0000000000000000        0.0000000000000000     
+ #  Constraints for forces: ion - coordinate
+ #          Parameters Jastrow two body
+           0
+ #          Parameters atomic wf
+           1           4         300
+           1   2.0000000000000000        1.0000000000000000       0.51091600000000004       0.51091600000000004     
+           3           1          36
+           1   1.1000000000000001     
+           5           1          37
+           1   1.2000000000000000     
+           1          20     1000000
+1 1 2 3 4 5 6 7 8 9 10 0.5109158292623772 0.5109158292623772 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+ #  Parameters atomic Jastrow wf 
+ #  Occupation atomic orbitals  
+           0
+           0
+           0
+           0
+           0
+           0
+           0
+           0
+           0
+           1
+ #  Occupation atomic orbitals  Jastrow  
+  #          Nonzero values of  detmat 
+           1           2   1.0000000000000000     
+ #   Grouped par.  in the chosen ordered basis
+          -1           1           2
+  #          Nonzero values of  jasmat 
+ # Eq. par. in the 3-body Jastrow in the chosen basis 
+ # Eq. par. in the atomic Det par.in the chosen basis 
+           1           1
+           1           2
+          -1           3
+           1           4
+           1           5
+           1           6
+ # Eq. par. in the atomic 3-body  par. in the chosen basis 

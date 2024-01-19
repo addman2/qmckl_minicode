@@ -1,2 +1,4 @@
 build*
 do
+example
+dockerize
