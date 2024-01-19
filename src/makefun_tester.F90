@@ -487,7 +487,10 @@ subroutine check_pa_value
                    &,indorb,indshell,multiplicities(ii),z,dd,zeta,r,rmu,distp    &
                    &,iflagnorm_unused,cr)
 
-        if (any(abs(z_test(:,0:indtm) - z(:,0:indtm)) > 1.0d-10)) then
+        ! Check if values are the same
+        ! Check if other values remained untouched
+        if (     any(abs(z_test(:,0:indtm) - z(:,0:indtm)) > 1.0d-10) &
+            .or. any(abs(z(:,indtm+1:indt)) > 10d-10)) then
             failed = .true.
             count_failed = count_failed + 1
         end if
