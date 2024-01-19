@@ -1,5 +1,4 @@
-#define MAX_FILES 65536
-#define MAX_FILE_LENGTH 30
+#include "c_lister.h"
 
 program makefun_tester
 
@@ -88,10 +87,12 @@ program makefun_tester
         allocate(distp(0:indt+4,20))
     
         !call create_single_value()
+        !call create_pa_value()
         !call create_svgl_value()
         call check_index_movement()
         call check_single_value()
         call check_svgl_value()
+        call check_pa_value()
 
         if (failed) then
             failed_test(ii) = 1
@@ -256,6 +257,46 @@ subroutine check_index_movement
 
 end subroutine check_index_movement
 
+subroutine create_pa_value
+
+    implicit none
+    character*80 :: filename
+
+    ! Generate random points
+    call random_number(rmu)
+    rmu = rmu * 4.0d0 - 2.0d0
+    
+    r = sqrt(sum(rmu**2, dim=1))
+    
+    ! Randomize parameters
+    call random_number(dd)
+
+    i0 = 0
+    indtmin = 0
+    indpar = 0
+    indorb = 0
+    indshell = 0
+    typec = 1
+    z = 0.0d0
+
+    call makefun(iorbs(ii),indt,i0,indtmin,indtm,typec,indpar      &
+               &,indorb,indshell,multiplicities(ii),z,dd,zeta,r,rmu,distp    &
+               &,iflagnorm_unused,cr)
+
+    ! In a binary file data/sv.dat we store the following data:
+    ! 1. iorbs(ii)
+    ! 2. dd array
+    ! 3. rmu array
+
+    write(filename, '(A,I3.3,A,A,A,A)') 'data/pa_', iorbs(ii), "_", random_string(15), '.dat'
+    open(unit=20, file=filename, form='unformatted', status='replace', action='write')
+    write(20) dd
+    write(20) rmu(:,:)
+    write(20) z(:, 0:indtm)
+    close(20)
+
+end subroutine create_pa_value
+
 subroutine create_svgl_value
 
     implicit none
@@ -396,6 +437,68 @@ subroutine check_single_value
     write(*, *)
 
 end subroutine check_single_value
+
+subroutine check_pa_value
+
+    implicit none
+
+    character :: files(MAX_FILE_LENGTH, MAX_FILES)
+    character*MAX_FILE_LENGTH :: filename
+    integer*4 :: num_files, i, j, iorb_test, ios, count_tests, count_failed
+    real*8 :: z_test(multiplicities(ii), 0:indtm)
+    character(*), parameter :: prefix = 'pa_'
+
+    write(*, '(A)') 'Test: calculate values for pseudo average'
+
+    call list_directory('data', 4, files, num_files, prefix, len_trim(prefix))
+    
+    count_tests = 0
+    count_failed = 0
+    do i = 1, num_files
+        do j = 1, MAX_FILE_LENGTH
+            filename(j:j) = files(j,i)
+        end do
+        
+        read(filename(len_trim(prefix)+1:len_trim(prefix)+3), '(I3)', iostat=ios ) iorb_test
+        if (ios /= 0) then
+            cycle
+        end if
+        if (iorb_test /= iorbs(ii)) then
+            cycle
+        else
+        end if
+
+        open(unit=20, file='data/'//trim(filename), form='unformatted', status='old', action='read')
+        read(20) dd
+        read(20) rmu(:,:)
+        read(20) z_test(:, 0:indtm)
+        close(20)
+
+        i0 = 0
+        indtmin = 0
+        typec = 1
+        indpar = 0
+        indorb = 0
+        indshell = 0
+        r = sqrt(sum(rmu**2, dim=1))
+        z = 0.0d0
+
+        call makefun(iorbs(ii),indt,i0,indtmin,indtm,typec,indpar      &
+                   &,indorb,indshell,multiplicities(ii),z,dd,zeta,r,rmu,distp    &
+                   &,iflagnorm_unused,cr)
+
+        if (any(abs(z_test(:,0:indtm) - z(:,0:indtm)) > 1.0d-10)) then
+            failed = .true.
+            count_failed = count_failed + 1
+        end if
+        count_tests = count_tests + 1
+
+    end do
+
+    write(*, '("tests/failed = ",I3, "/",I3)') count_tests, count_failed
+    write(*, *)
+
+end subroutine check_pa_value
 
 subroutine check_svgl_value
 

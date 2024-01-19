@@ -3,9 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
-
-#define MAX_FILES 65536
-#define MAX_FILE_LENGTH 30
+#include "c_lister.h"
 
 extern void list_directory(char *path, int path_length, char *files, int *num_files, char *prefix, int prefix_length) {
 
