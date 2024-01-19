@@ -1,3 +1,13 @@
+  ! s orbital
+  ! 
+  ! - angmom = 0
+  ! - type = Slater
+  ! - normalized = yes
+  ! - angtype = spherical
+  ! - npar = 1
+  ! - multiplicity = 1
+  !
+
   indshellp=indshell+1
   dd1=dd(indpar+1)
   c=dd1*dsqrt(dd1)*0.56418958354775628695d0
