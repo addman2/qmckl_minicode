@@ -25,7 +25,7 @@ contains
         else
             write (6,*) "QMCKL GPU context created"
         end if
-        
+
     end subroutine qmckl_gpu_init
 
     subroutine qmckl_gpu_finalize()

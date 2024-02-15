@@ -223,7 +223,7 @@ subroutine provider_qmckl(point&
         print *, "qmckl_set_point succeeded"
     end if
 
-    if (gl.eq.0) then 
+    if (gl.eq.0) then
         rc = qmckl_get_ao_basis_ao_value_inplace(qmckl_ctx&
                                               &, values&
                                               &, 1_8 * multiplicity)
