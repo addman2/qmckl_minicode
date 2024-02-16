@@ -22,7 +22,7 @@ program qmckl_gpu_example_trexio
 #ifdef _QMCKL_GPU
 
     num_points = 3
-    p_ = 3
+    p_ = 1
 
 !#####################################################
 !#                                                   #
@@ -114,32 +114,7 @@ program qmckl_gpu_example_trexio
         print *, "qmckl_set_point succeeded"
     end if
 
-    !!$omp target data map(to:points)
-    !!$omp target data use_device_ptr(points)
-    !rc = qmckl_set_point_device(&
-    !                         &  qmckl_gpu_ctx&
-    !                         &, "N"&
-    !                         &, 1_8 * p_&
-    !                         &, PTR_C(points)&
-    !                         &, 3_8*num_points)
-    !!$omp end target data
-
-    rc =  qmckl_set_point_device_from_host(&
-                                        &  qmckl_gpu_ctx&
-                                        &, "N"&
-                                        &, 1_8 * p_&
-                                        &, points&
-                                        &, 3_8*num_points)
-
-    if (rc .ne. 0) then
-        print *, "qmckl_set_point failed"
-        print *, "Error code", rc
-        stop 1
-    else
-        print *, "qmckl_set_point succeeded"
-    end if
-
-    !!$omp end target data
+    call setup_points(num_points, "nat", points)
 
     deallocate(points)
 
@@ -220,4 +195,96 @@ program qmckl_gpu_example_trexio
     call qmckl_gpu_finalize()
 
 #endif
+
+contains
+
+
+    subroutine setup_points(num_points, typ, points)
+
+        integer(kind=4), intent(in) :: num_points
+        character(len=*), intent(in) :: typ
+        real(kind=8), dimension(:,:), intent(in) :: points(3, num_points)
+
+        type(c_ptr) :: points_device
+
+        ! I forgot what type is context therefore
+        ! I am passing ti from main program
+
+        if (trim(typ).eq."omp") then
+            !$omp target data map(to:points)
+            !$omp target data use_device_ptr(points)
+            rc = qmckl_set_point_device(&
+                                     &  qmckl_gpu_ctx&
+                                     &, "N"&
+                                     &, 1_8 * p_&
+                                     &, PTR_C(points)&
+                                     &, 3_8*num_points)
+            !$omp end target data
+            !$omp end target data
+
+        else if (trim(typ).eq."host") then
+            rc =  qmckl_set_point_device_from_host(&
+                                                &  qmckl_gpu_ctx&
+                                                &, "N"&
+                                                &, 1_8 * p_&
+                                                &, points&
+                                                &, 3_8*num_points)
+        else if (trim(typ).eq."nat") then
+            points_device = qmckl_malloc_device(qmckl_gpu_ctx, 8_8*3*num_points)
+
+            if (points_device .eq. c_null_ptr) then
+                print *, "Error allocating device memory"
+                stop 1
+            else
+                print *, "Device memory allocated"
+            end if
+
+            rc = qmckl_memcpy_H2D_double(qmckl_gpu_ctx, points_device, points, 8_8*3*num_points)
+
+            if (rc .ne. 0) then
+                print *, "Error copying data to device"
+                stop 1
+            else
+                print *, "Data copied to device"
+            end if
+
+            rc = qmckl_set_point_device(&
+                                     &  qmckl_gpu_ctx&
+                                     &, "N"&
+                                     &, 1_8 * p_&
+                                     &, points_device&
+                                     &, 3_8*num_points)
+
+            if (rc .ne. 0) then
+                print *, "qmckl_set_point failed"
+                print *, "Error code", rc
+                stop 1
+            else
+                print *, "qmckl_set_point succeeded"
+            end if
+
+            rc = qmckl_free_device(qmckl_gpu_ctx, points_device)
+
+            if (rc .ne. 0) then
+                print *, "Error freeing device memory"
+                stop 1
+            else
+                print *, "Device memory freed"
+            end if
+
+        else
+            write(*,*) "Unknown type"
+            stop 1
+        end if
+
+        if (rc .ne. 0) then
+            print *, "qmckl_set_point failed"
+            print *, "Error code", rc
+            stop 1
+        else
+            print *, "qmckl_set_point succeeded"
+        end if
+
+    end subroutine setup_points
+
 end program qmckl_gpu_example_trexio
