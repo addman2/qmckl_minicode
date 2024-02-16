@@ -206,7 +206,7 @@ subroutine provider_qmckl_gpu(point&
 
     shell_prim_num(1) = 1
     !$omp target update to(shell_prim_num)
-    
+
     !$omp target data use_device_ptr(shell_prim_num)
     rc = qmckl_set_ao_basis_shell_prim_num_device(qmckl_gpu_ctx, PTR_C(shell_prim_num), 1_8)
     !$omp end target data
@@ -271,7 +271,7 @@ subroutine provider_qmckl_gpu(point&
 
     prim_factor(1) = 1.0_8
     !$omp target update to(prim_factor)
-    
+
     !$omp target data use_device_ptr(prim_factor)
     rc = qmckl_set_ao_basis_prim_factor_device(qmckl_gpu_ctx, PTR_C(prim_factor), 1_8)
     !$omp end target data
@@ -328,7 +328,7 @@ subroutine provider_qmckl_gpu(point&
         print *, "qmckl_set_point succeeded"
     end if
 
-    if (gl.eq.0) then 
+    if (gl.eq.0) then
         !$omp target data map(from:values(1:multiplicity))
 
         !$omp target data use_device_ptr(values)
